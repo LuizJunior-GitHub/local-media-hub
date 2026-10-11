@@ -1,0 +1,13 @@
+{
+  "id": "esther",
+  "name": "Rainha Ester",
+  "description": "Rainha Ester na corte persa com coroa de ouro, vestes reais de seda dourada e iluminação de velas",
+  "image_filename": "esther.png",
+  "file_path": "D:\\GitHub\\local-media-hub\\storage\\references\\characters\\esther.png",
+  "url": "/references/characters/esther.png",
+  "default_prompt_modifier": "queen esther, golden persian crown, luxurious silk royal robes, candlelit palace, photorealistic 8k portrait",
+  "width": 1024,
+  "height": 1024,
+  "created_at": "2026-10-11T18:50:00.254385+00:00",
+  "updated_at": "2026-10-11T18:50:00.254397+00:00"
+}

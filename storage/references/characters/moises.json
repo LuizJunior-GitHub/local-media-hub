@@ -1,0 +1,13 @@
+{
+  "id": "moises",
+  "name": "Moisés",
+  "description": "Patriarca bíblico com barba grisalha, semblante sábio e manto rústico de linho",
+  "image_filename": "moises.png",
+  "file_path": "D:\\GitHub\\local-media-hub\\storage\\references\\characters\\moises.png",
+  "url": "/references/characters/moises.png",
+  "default_prompt_modifier": "elderly biblical patriarch, grey beard, rustic linen robes, ancient desert lighting, 8k portrait",
+  "width": 1024,
+  "height": 1024,
+  "created_at": "2026-10-11T17:03:57.949297+00:00",
+  "updated_at": "2026-10-11T17:03:57.949306+00:00"
+}

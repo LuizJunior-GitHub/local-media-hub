@@ -1,0 +1,13 @@
+{
+  "id": "templo_salomao",
+  "name": "Templo de Salomão",
+  "description": "Interior monumental do antigo templo em Jerusalém com colunas douradas e cedro do Líbano",
+  "image_filename": "templo.png",
+  "file_path": "D:\\GitHub\\local-media-hub\\storage\\references\\locations\\templo.png",
+  "url": "/references/locations/templo.png",
+  "style_notes": "monumental stone pillars, golden accents, warm morning sunbeams through high clerestory, cinematic atmosphere",
+  "width": 1024,
+  "height": 1024,
+  "created_at": "2026-10-11T17:03:57.955090+00:00",
+  "updated_at": "2026-10-11T17:03:57.955095+00:00"
+}

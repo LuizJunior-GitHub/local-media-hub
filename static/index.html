@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Media Hub — Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+            },
+            dark: {
+              900: '#090d16',
+              800: '#0f172a',
+              700: '#1e293b',
+              600: '#334155'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-dark-900 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
+
+  <!-- TOP HEADER & SYSTEM MONITOR -->
+  <header class="border-b border-dark-700/80 bg-dark-800/90 backdrop-blur sticky top-0 z-50 px-6 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 font-black text-xl text-white">
+          ⚡
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight flex items-center gap-2">
+            Local Media Hub
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Studio v0.1</span>
+          </h1>
+          <p class="text-xs text-slate-400">Gateway Local de Inferência & Servidor MCP</p>
+        </div>
+      </div>
+
+      <!-- Live GPU & ComfyUI Status Cards -->
+      <div class="flex items-center flex-wrap gap-2.5 text-xs">
+        <!-- GPU Target -->
+        <div class="px-3 py-1.5 rounded-lg bg-dark-700/60 border border-dark-600 flex items-center gap-2">
+          <span class="text-slate-400">GPU:</span>
+          <span class="font-medium text-slate-200">RX 7800 XT (16 GB)</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300">DirectML/ROCm</span>
+        </div>
+
+        <!-- ComfyUI Status -->
+        <div id="comfy-status-badge" class="px-3 py-1.5 rounded-lg bg-dark-700/60 border border-dark-600 flex items-center gap-2">
+          <span id="comfy-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="comfy-text" class="font-medium text-slate-300">Verificando ComfyUI...</span>
+        </div>
+
+        <!-- GPU Queue Lock -->
+        <div class="px-3 py-1.5 rounded-lg bg-dark-700/60 border border-dark-600 flex items-center gap-2">
+          <span class="text-slate-400">Fila GPU:</span>
+          <span id="queue-count" class="font-bold text-emerald-400">0</span>
+          <span id="gpu-lock-state" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">Livre</span>
+        </div>
+
+        <!-- VRAM Clean Button -->
+        <button id="btn-free-vram" onclick="freeVRAM()" title="Limpar VRAM e descarregar modelos do ComfyUI" class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition flex items-center gap-1.5 font-medium">
+          🧹 Limpar VRAM
+        </button>
+
+        <!-- Swagger Docs -->
+        <a href="/docs" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-600/60 text-slate-300 border border-dark-600 transition flex items-center gap-1 font-medium">
+          📖 API Docs
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKBENCH -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: CONTROLS & TABS (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-5">
+
+      <!-- Navigation Tabs -->
+      <div class="flex border-b border-dark-700 gap-1 overflow-x-auto pb-1 text-sm font-medium">
+        <button onclick="setTab('sdxl')" id="tab-btn-sdxl" class="tab-btn active px-4 py-2.5 rounded-t-lg border-b-2 border-emerald-500 text-emerald-400 bg-dark-800/80 flex items-center gap-2 transition">
+          <span>⚡ SDXL Rápido</span>
+          <span class="text-[10px] opacity-75 px-1 rounded bg-emerald-500/20">3-5s</span>
+        </button>
+        <button onclick="setTab('flux')" id="tab-btn-flux" class="tab-btn px-4 py-2.5 rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-dark-800/40 flex items-center gap-2 transition">
+          <span>🎬 Flux.1 Schnell</span>
+          <span class="text-[10px] opacity-75 px-1 rounded bg-blue-500/20 text-blue-300">Cinema</span>
+        </button>
+        <button onclick="setTab('character')" id="tab-btn-character" class="tab-btn px-4 py-2.5 rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-dark-800/40 flex items-center gap-2 transition">
+          <span>👤 Personagem Consistente</span>
+        </button>
+        <button onclick="setTab('location')" id="tab-btn-location" class="tab-btn px-4 py-2.5 rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-dark-800/40 flex items-center gap-2 transition">
+          <span>🏛️ Cenário Consistente</span>
+        </button>
+        <button onclick="setTab('assets')" id="tab-btn-assets" class="tab-btn px-4 py-2.5 rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-dark-800/40 flex items-center gap-2 transition">
+          <span>📁 Gerenciar Âncoras</span>
+        </button>
+      </div>
+
+      <!-- TAB PANEL 1: SDXL STANDARD -->
+      <div id="tab-sdxl" class="tab-panel bg-dark-800/60 border border-dark-700/80 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Prompt Positivo</label>
+          <textarea id="sdxl-prompt" rows="3" class="w-full bg-dark-900 border border-dark-600 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition" placeholder="Ex: A biblical cinematic portrait of a wise prophet on a mountain at golden hour, 8k, highly detailed..."></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Prompt Negativo</label>
+          <textarea id="sdxl-neg" rows="2" class="w-full bg-dark-900 border border-dark-600 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">ugly, deformed face, bad eyes, disfigured, bad anatomy, duplicate, blur, watermark, low quality</textarea>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Steps: <span id="sdxl-steps-val" class="text-emerald-400 font-bold">30</span></label>
+            <input type="range" id="sdxl-steps" min="15" max="50" value="30" oninput="document.getElementById('sdxl-steps-val').textContent=this.value" class="w-full accent-emerald-500 cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">CFG Scale: <span id="sdxl-cfg-val" class="text-emerald-400 font-bold">7.0</span></label>
+            <input type="range" id="sdxl-cfg" min="1.0" max="15.0" step="0.5" value="7.0" oninput="document.getElementById('sdxl-cfg-val').textContent=this.value" class="w-full accent-emerald-500 cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Dimensões</label>
+            <select id="sdxl-dims" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+              <option value="1024x1024" selected>1024 x 1024 (1:1)</option>
+              <option value="896x1152">896 x 1152 (3:4)</option>
+              <option value="1152x896">1152 x 896 (4:3)</option>
+              <option value="768x1344">768 x 1344 (9:16 Shorts)</option>
+              <option value="1344x768">1344 x 768 (16:9 YouTube)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Seed (opcional)</label>
+            <input type="number" id="sdxl-seed" placeholder="Aleatório" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <button onclick="generateSDXL()" id="btn-submit-sdxl" class="mt-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+          <span>⚡ Gerar Imagem com SDXL</span>
+        </button>
+      </div>
+
+      <!-- TAB PANEL 2: FLUX.1 SCHNELL -->
+      <div id="tab-flux" class="tab-panel hidden bg-dark-800/60 border border-dark-700/80 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Prompt Cinematográfico</label>
+          <textarea id="flux-prompt" rows="3" class="w-full bg-dark-900 border border-dark-600 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition" placeholder="Ex: Hyperrealistic documentary 35mm photograph of ancient desert encampment with torches flickering at dusk, 8k resolution, cinematic color grading..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Steps: <span id="flux-steps-val" class="text-blue-400 font-bold">4</span></label>
+            <input type="range" id="flux-steps" min="2" max="8" value="4" oninput="document.getElementById('flux-steps-val').textContent=this.value" class="w-full accent-blue-500 cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Guidance: <span id="flux-guidance-val" class="text-blue-400 font-bold">3.5</span></label>
+            <input type="range" id="flux-guidance" min="1.0" max="7.0" step="0.5" value="3.5" oninput="document.getElementById('flux-guidance-val').textContent=this.value" class="w-full accent-blue-500 cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Dimensões</label>
+            <select id="flux-dims" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+              <option value="1024x1024" selected>1024 x 1024 (1:1)</option>
+              <option value="896x1152">896 x 1152 (3:4)</option>
+              <option value="1152x896">1152 x 896 (4:3)</option>
+              <option value="768x1344">768 x 1344 (9:16 Shorts)</option>
+              <option value="1344x768">1344 x 768 (16:9 YouTube)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Seed (opcional)</label>
+            <input type="number" id="flux-seed" placeholder="Aleatório" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <button onclick="generateFlux()" id="btn-submit-flux" class="mt-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2">
+          <span>🎬 Gerar Imagem com Flux.1 Schnell</span>
+        </button>
+      </div>
+
+      <!-- TAB PANEL 3: CHARACTER CONSISTENCY -->
+      <div id="tab-character" class="tab-panel hidden bg-dark-800/60 border border-dark-700/80 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <!-- Character Selector with visual anchor card -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center bg-dark-900/60 border border-dark-700 p-3 rounded-xl">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Âncora Facial Selecionada</label>
+            <select id="char-select" onchange="updateSelectedCharPreview()" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+              <option value="">Carregando âncoras...</option>
+            </select>
+            <p id="char-desc" class="text-xs text-slate-400 mt-1 italic"></p>
+          </div>
+          <div class="flex justify-center sm:justify-end">
+            <img id="char-preview-thumb" src="" alt="Anchor preview" class="w-20 h-20 rounded-xl object-cover border-2 border-emerald-500/50 hidden shadow-md">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Cena / Ação do Personagem</label>
+          <textarea id="char-prompt" rows="3" class="w-full bg-dark-900 border border-dark-600 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition" placeholder="Ex: Segurando as tábuas de pedra no Monte Sinai ao pôr do sol, vento forte agitando o manto, iluminação épica..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Força Facial (IP-Adapter): <span id="char-strength-val" class="text-emerald-400 font-bold">0.85</span></label>
+            <input type="range" id="char-strength" min="0.4" max="1.0" step="0.05" value="0.85" oninput="document.getElementById('char-strength-val').textContent=this.value" class="w-full accent-emerald-500 cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Seed (opcional)</label>
+            <input type="number" id="char-seed" placeholder="Aleatório" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <button onclick="generateCharacter()" id="btn-submit-char" class="mt-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+          <span>👤 Gerar Personagem Consistente</span>
+        </button>
+      </div>
+
+      <!-- TAB PANEL 4: LOCATION CONSISTENCY -->
+      <div id="tab-location" class="tab-panel hidden bg-dark-800/60 border border-dark-700/80 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <!-- Location Selector with visual anchor card -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center bg-dark-900/60 border border-dark-700 p-3 rounded-xl">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Âncora de Cenário Selecionada</label>
+            <select id="loc-select" onchange="updateSelectedLocPreview()" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+              <option value="">Carregando locais...</option>
+            </select>
+            <p id="loc-desc" class="text-xs text-slate-400 mt-1 italic"></p>
+          </div>
+          <div class="flex justify-center sm:justify-end">
+            <img id="loc-preview-thumb" src="" alt="Location preview" class="w-20 h-20 rounded-xl object-cover border-2 border-amber-500/50 hidden shadow-md">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Cena / Evento no Cenário</label>
+          <textarea id="loc-prompt" rows="3" class="w-full bg-dark-900 border border-dark-600 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition" placeholder="Ex: Sacerdotes caminhando em procissão solene pelo pátio com tochas ao amanhecer..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Aderência Estrutural (Depth): <span id="loc-strength-val" class="text-amber-400 font-bold">0.60</span></label>
+            <input type="range" id="loc-strength" min="0.2" max="1.0" step="0.05" value="0.60" oninput="document.getElementById('loc-strength-val').textContent=this.value" class="w-full accent-amber-500 cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-medium">Seed (opcional)</label>
+            <input type="number" id="loc-seed" placeholder="Aleatório" class="w-full bg-dark-900 border border-dark-600 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <button onclick="generateLocation()" id="btn-submit-loc" class="mt-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-semibold text-sm shadow-lg shadow-amber-600/30 transition flex items-center justify-center gap-2">
+          <span>🏛️ Gerar Cenário Consistente</span>
+        </button>
+      </div>
+
+      <!-- TAB PANEL 5: ASSET MANAGEMENT -->
+      <div id="tab-assets" class="tab-panel hidden bg-dark-800/60 border border-dark-700/80 rounded-2xl p-5 shadow-xl flex flex-col gap-6">
+        <div>
+          <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
+            <span>➕ Cadastrar Nova Âncora</span>
+          </h3>
+          <div class="bg-dark-900/80 border border-dark-700 p-4 rounded-xl flex flex-col gap-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Tipo de Âncora</label>
+                <select id="upload-asset-type" class="w-full bg-dark-800 border border-dark-600 rounded-lg p-2 text-xs text-slate-100">
+                  <option value="characters">Personagem (Facial)</option>
+                  <option value="locations">Cenário / Local</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">ID Slug (sem espaços)</label>
+                <input type="text" id="upload-asset-id" placeholder="ex: davi ou monte_sinai" class="w-full bg-dark-800 border border-dark-600 rounded-lg p-2 text-xs text-slate-100">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Nome Exibição</label>
+                <input type="text" id="upload-asset-name" placeholder="ex: Rei Davi" class="w-full bg-dark-800 border border-dark-600 rounded-lg p-2 text-xs text-slate-100">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Imagem Âncora (PNG, JPG)</label>
+                <input type="file" id="upload-asset-file" accept="image/*" class="w-full bg-dark-800 border border-dark-600 rounded-lg p-1.5 text-xs text-slate-300">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Descrição Visual & Modificador Automático</label>
+              <input type="text" id="upload-asset-desc" placeholder="ex: Jovem pastor com harpa, vestes de linho rústico, 8k portrait" class="w-full bg-dark-800 border border-dark-600 rounded-lg p-2 text-xs text-slate-100">
+            </div>
+            <button onclick="submitNewAsset()" class="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold text-xs transition">
+              Salvar Nova Âncora no Disco
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-slate-200 mb-3">Âncoras Atuais no Disco</h3>
+          <div id="assets-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <!-- Dynamic loaded items -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: PROGRESS & OUTPUT VIEWPORT (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+
+      <!-- ACTIVE STATUS & PROGRESS CARD -->
+      <div id="progress-card" class="bg-dark-800/80 border border-dark-700/80 rounded-2xl p-5 shadow-xl flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <span id="job-spinner" class="hidden w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span id="job-status-text">Pronto para gerar</span>
+          </span>
+          <span id="job-time-text" class="text-xs font-mono text-slate-400">0.0s</span>
+        </div>
+
+        <!-- Progress bar container -->
+        <div class="w-full bg-dark-900 rounded-full h-3.5 overflow-hidden border border-dark-600/60 p-0.5">
+          <div id="progress-bar-fill" class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full rounded-full transition-all duration-200 w-0"></div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span id="progress-step-text">Aguardando comando...</span>
+          <span id="progress-percent-text">0%</span>
+        </div>
+      </div>
+
+      <!-- GENERATED IMAGE VIEWPORT -->
+      <div class="bg-dark-800/80 border border-dark-700/80 rounded-2xl p-5 shadow-xl flex flex-col items-center justify-center min-h-[380px] relative overflow-hidden group">
+        <!-- Placeholder Empty State -->
+        <div id="viewport-empty" class="flex flex-col items-center justify-center text-center p-8 text-slate-500">
+          <div class="w-16 h-16 rounded-2xl bg-dark-700/60 flex items-center justify-center text-3xl mb-3">
+            🎨
+          </div>
+          <p class="text-sm font-medium text-slate-400">Nenhuma imagem gerada ainda</p>
+          <p class="text-xs text-slate-500 mt-1">Configure o prompt ao lado e clique em Gerar para iniciar a inferência na GPU.</p>
+        </div>
+
+        <!-- Active Generated Image -->
+        <div id="viewport-result" class="hidden w-full flex flex-col gap-3">
+          <div class="relative w-full rounded-xl overflow-hidden bg-black aspect-square flex items-center justify-center border border-dark-600">
+            <img id="main-output-img" src="" alt="Resultado gerado" class="w-full h-full object-contain cursor-pointer" onclick="openFullImage(this.src)">
+          </div>
+
+          <!-- Output Info Metadata Bar -->
+          <div class="bg-dark-900/90 border border-dark-700 rounded-xl p-3 text-xs flex flex-col gap-1.5 font-mono">
+            <div class="flex items-center justify-between text-slate-300">
+              <span id="out-model-badge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-sans font-medium text-[10px]">SDXL</span>
+              <span id="out-time-badge" class="text-slate-400">3.4s</span>
+            </div>
+            <div class="text-[11px] text-slate-400 truncate" id="out-prompt-text"></div>
+            <div class="flex items-center justify-between text-slate-400 text-[10px] pt-1 border-t border-dark-700/60">
+              <span id="out-seed-text">Seed: -</span>
+              <a id="out-download-btn" href="#" download class="text-emerald-400 hover:text-emerald-300 font-sans font-semibold flex items-center gap-1">
+                📥 Baixar Imagem
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT JOBS GALLERY -->
+      <div class="bg-dark-800/80 border border-dark-700/80 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Gerações Recentes</h4>
+          <button onclick="loadRecentJobs()" class="text-xs text-emerald-400 hover:underline">Atualizar</button>
+        </div>
+        <div id="recent-jobs-list" class="flex gap-2.5 overflow-x-auto pb-1 min-h-[70px]">
+          <span class="text-xs text-slate-500 italic p-2">Nenhum job recente na sessão.</span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let activeJobId = null;
+    let jobTimerInterval = null;
+    let jobStartTime = null;
+
+    // -------------------------------------------------------------------------
+    // TAB MANAGEMENT
+    // -------------------------------------------------------------------------
+    function setTab(tabId) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active', 'border-emerald-500', 'text-emerald-400', 'bg-dark-800/80');
+        b.classList.add('border-transparent', 'text-slate-400');
+      });
+
+      const panel = document.getElementById(`tab-${tabId}`);
+      const btn = document.getElementById(`tab-btn-${tabId}`);
+      if (panel && btn) {
+        panel.classList.remove('hidden');
+        btn.classList.add('active', 'border-emerald-500', 'text-emerald-400', 'bg-dark-800/80');
+      }
+
+      if (tabId === 'assets') {
+        loadAssetsManager();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // SYSTEM POLLING & HEALTH
+    // -------------------------------------------------------------------------
+    async function checkSystemHealth() {
+      try {
+        const res = await fetch('/api/v1/system/health');
+        if (res.ok) {
+          const data = await res.json();
+          const dot = document.getElementById('comfy-dot');
+          const text = document.getElementById('comfy-text');
+          const badge = document.getElementById('comfy-status-badge');
+
+          if (data.comfyui_online) {
+            dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400";
+            text.textContent = "ComfyUI Online";
+            text.className = "font-medium text-emerald-300";
+          } else {
+            dot.className = "w-2 h-2 rounded-full bg-rose-500 animate-pulse";
+            text.textContent = "ComfyUI Desconectado";
+            text.className = "font-medium text-rose-300";
+          }
+
+          if (data.queue) {
+            document.getElementById('queue-count').textContent = data.queue.queue_length;
+            const lock = document.getElementById('gpu-lock-state');
+            if (data.queue.gpu_locked) {
+              lock.textContent = "GPU Ocupada";
+              lock.className = "text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300";
+            } else {
+              lock.textContent = "Livre";
+              lock.className = "text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300";
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("System poll error", e);
+      }
+    }
+
+    async function freeVRAM() {
+      const btn = document.getElementById('btn-free-vram');
+      btn.textContent = "Limpando...";
+      try {
+        const res = await fetch('/api/v1/system/gpu/free', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || "Comando de liberação enviado!");
+      } catch (e) {
+        alert("Erro ao tentar limpar VRAM");
+      } finally {
+        btn.textContent = "🧹 Limpar VRAM";
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // LOAD ASSETS FOR SELECTORS
+    // -------------------------------------------------------------------------
+    let cachedCharacters = [];
+    let cachedLocations = [];
+
+    async function loadAssets() {
+      try {
+        const res = await fetch('/api/v1/assets');
+        if (res.ok) {
+          const data = await res.json();
+          cachedCharacters = data.characters || [];
+          cachedLocations = data.locations || [];
+
+          // Populate Character Selector
+          const charSelect = document.getElementById('char-select');
+          charSelect.innerHTML = cachedCharacters.map(c => 
+            `<option value="${c.id}">${c.name} (${c.id})</option>`
+          ).join('');
+          updateSelectedCharPreview();
+
+          // Populate Location Selector
+          const locSelect = document.getElementById('loc-select');
+          locSelect.innerHTML = cachedLocations.map(l => 
+            `<option value="${l.id}">${l.name} (${l.id})</option>`
+          ).join('');
+          updateSelectedLocPreview();
+        }
+      } catch (e) {
+        console.error("Failed to load assets", e);
+      }
+    }
+
+    function updateSelectedCharPreview() {
+      const charId = document.getElementById('char-select').value;
+      const char = cachedCharacters.find(c => c.id === charId);
+      const thumb = document.getElementById('char-preview-thumb');
+      const desc = document.getElementById('char-desc');
+      if (char) {
+        thumb.src = char.url;
+        thumb.classList.remove('hidden');
+        desc.textContent = char.description || char.default_prompt_modifier || "";
+      } else {
+        thumb.classList.add('hidden');
+        desc.textContent = "";
+      }
+    }
+
+    function updateSelectedLocPreview() {
+      const locId = document.getElementById('loc-select').value;
+      const loc = cachedLocations.find(l => l.id === locId);
+      const thumb = document.getElementById('loc-preview-thumb');
+      const desc = document.getElementById('loc-desc');
+      if (loc) {
+        thumb.src = loc.url;
+        thumb.classList.remove('hidden');
+        desc.textContent = loc.description || loc.style_notes || "";
+      } else {
+        thumb.classList.add('hidden');
+        desc.textContent = "";
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERATION HANDLERS
+    // -------------------------------------------------------------------------
+    async function submitJob(endpoint, payload) {
+      startJobUI();
+      try {
+        // Enqueue asynchronously with wait_for_completion: false
+        payload.wait_for_completion = false;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Falha ao submeter job");
+        }
+
+        const data = await res.json();
+        activeJobId = data.job_id;
+        listenJobWebSocket(activeJobId);
+
+      } catch (err) {
+        endJobUI(false, err.message);
+      }
+    }
+
+    function generateSDXL() {
+      const prompt = document.getElementById('sdxl-prompt').value.trim();
+      if (!prompt) return alert("Digite um prompt para o SDXL!");
+
+      const [w, h] = document.getElementById('sdxl-dims').value.split('x').map(Number);
+      const seedVal = document.getElementById('sdxl-seed').value;
+
+      submitJob('/api/v1/generate/sdxl', {
+        prompt,
+        negative_prompt: document.getElementById('sdxl-neg').value,
+        steps: parseInt(document.getElementById('sdxl-steps').value),
+        cfg_scale: parseFloat(document.getElementById('sdxl-cfg').value),
+        width: w,
+        height: h,
+        seed: seedVal ? parseInt(seedVal) : null
+      });
+    }
+
+    function generateFlux() {
+      const prompt = document.getElementById('flux-prompt').value.trim();
+      if (!prompt) return alert("Digite um prompt para o Flux!");
+
+      const [w, h] = document.getElementById('flux-dims').value.split('x').map(Number);
+      const seedVal = document.getElementById('flux-seed').value;
+
+      submitJob('/api/v1/generate/flux', {
+        prompt,
+        steps: parseInt(document.getElementById('flux-steps').value),
+        guidance: parseFloat(document.getElementById('flux-guidance').value),
+        width: w,
+        height: h,
+        seed: seedVal ? parseInt(seedVal) : null
+      });
+    }
+
+    function generateCharacter() {
+      const charId = document.getElementById('char-select').value;
+      const prompt = document.getElementById('char-prompt').value.trim();
+      if (!charId) return alert("Selecione um personagem âncora!");
+      if (!prompt) return alert("Descreva a cena do personagem!");
+
+      const seedVal = document.getElementById('char-seed').value;
+
+      submitJob('/api/v1/generate/character', {
+        character_id: charId,
+        prompt,
+        face_strength: parseFloat(document.getElementById('char-strength').value),
+        seed: seedVal ? parseInt(seedVal) : null
+      });
+    }
+
+    function generateLocation() {
+      const locId = document.getElementById('loc-select').value;
+      const prompt = document.getElementById('loc-prompt').value.trim();
+      if (!locId) return alert("Selecione um local âncora!");
+      if (!prompt) return alert("Descreva o evento no local!");
+
+      const seedVal = document.getElementById('loc-seed').value;
+
+      submitJob('/api/v1/generate/location', {
+        location_id: locId,
+        prompt,
+        depth_strength: parseFloat(document.getElementById('loc-strength').value),
+        seed: seedVal ? parseInt(seedVal) : null
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // WEBSOCKET REAL-TIME LISTENER
+    // -------------------------------------------------------------------------
+    function listenJobWebSocket(jobId) {
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${proto}//${window.location.host}/api/v1/jobs/${jobId}/ws`;
+      const ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const job = JSON.parse(event.data);
+          updateProgress(job);
+
+          if (job.status === 'completed') {
+            endJobUI(true, null, job);
+            ws.close();
+          } else if (job.status === 'failed' || job.status === 'cancelled') {
+            endJobUI(false, job.error || "Job falhou", job);
+            ws.close();
+          }
+        } catch (e) {
+          console.error("WS Parse error", e);
+        }
+      };
+
+      ws.onerror = (e) => {
+        console.warn("WS error, fallback to polling", e);
+        pollJob(jobId);
+      };
+    }
+
+    async function pollJob(jobId) {
+      const timer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/v1/jobs/${jobId}`);
+          if (res.ok) {
+            const job = await res.json();
+            updateProgress(job);
+            if (job.status === 'completed') {
+              clearInterval(timer);
+              endJobUI(true, null, job);
+            } else if (job.status === 'failed' || job.status === 'cancelled') {
+              clearInterval(timer);
+              endJobUI(false, job.error || "Job falhou", job);
+            }
+          }
+        } catch (e) {
+          clearInterval(timer);
+        }
+      }, 1000);
+    }
+
+    // -------------------------------------------------------------------------
+    // UI PROGRESS HELPERS
+    // -------------------------------------------------------------------------
+    function startJobUI() {
+      jobStartTime = Date.now();
+      document.getElementById('job-spinner').classList.remove('hidden');
+      document.getElementById('job-status-text').textContent = "Na Fila da GPU...";
+      document.getElementById('progress-step-text').textContent = "Alocando VRAM...";
+      document.getElementById('progress-bar-fill').style.width = "5%";
+      document.getElementById('progress-percent-text').textContent = "5%";
+
+      if (jobTimerInterval) clearInterval(jobTimerInterval);
+      jobTimerInterval = setInterval(() => {
+        const elapsed = ((Date.now() - jobStartTime) / 1000).toFixed(1);
+        document.getElementById('job-time-text').textContent = `${elapsed}s`;
+      }, 100);
+    }
+
+    function updateProgress(job) {
+      if (job.status === 'processing') {
+        document.getElementById('job-status-text').textContent = "Executando Inferência...";
+        const pct = Math.round(job.progress * 100);
+        document.getElementById('progress-bar-fill').style.width = `${Math.max(pct, 5)}%`;
+        document.getElementById('progress-percent-text').textContent = `${pct}%`;
+        if (job.total_steps > 0) {
+          document.getElementById('progress-step-text').textContent = `Passo ${job.current_step} de ${job.total_steps}`;
+        }
+      }
+    }
+
+    function endJobUI(success, errorMsg, job) {
+      if (jobTimerInterval) clearInterval(jobTimerInterval);
+      document.getElementById('job-spinner').classList.add('hidden');
+
+      if (success && job && job.images && job.images.length > 0) {
+        document.getElementById('job-status-text').textContent = "✅ Concluído com Sucesso!";
+        document.getElementById('progress-bar-fill').style.width = "100%";
+        document.getElementById('progress-percent-text').textContent = "100%";
+        document.getElementById('progress-step-text').textContent = `Finalizado em ${job.execution_time_seconds || 0}s`;
+
+        // Render in Viewport
+        const img = job.images[0];
+        document.getElementById('viewport-empty').classList.add('hidden');
+        document.getElementById('viewport-result').classList.remove('hidden');
+        document.getElementById('main-output-img').src = img.url;
+        document.getElementById('out-model-badge').textContent = (job.engine || 'SDXL').toUpperCase();
+        document.getElementById('out-time-badge').textContent = `${job.execution_time_seconds}s`;
+        document.getElementById('out-prompt-text').textContent = job.prompt;
+        document.getElementById('out-seed-text').textContent = `Seed: ${img.seed}`;
+        document.getElementById('out-download-btn').href = img.url;
+
+        loadRecentJobs();
+      } else {
+        document.getElementById('job-status-text').textContent = "❌ Falha na Geração";
+        document.getElementById('progress-step-text').textContent = errorMsg || "Erro inesperado";
+        alert(`Erro na geração: ${errorMsg}`);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // RECENT JOBS GALLERY
+    // -------------------------------------------------------------------------
+    async function loadRecentJobs() {
+      try {
+        const res = await fetch('/api/v1/gallery?limit=15');
+        if (res.ok) {
+          const data = await res.json();
+          const container = document.getElementById('recent-jobs-list');
+          const images = data.images || [];
+
+          if (images.length === 0) {
+            container.innerHTML = '<span class="text-xs text-slate-500 italic p-2">Nenhuma imagem concluída ainda.</span>';
+            return;
+          }
+
+          container.innerHTML = images.map(img => {
+            return `
+              <div onclick="previewPastJob('${img.url}', '${img.engine}', '${img.filename}', '', '')" 
+                   title="${img.filename}"
+                   class="cursor-pointer flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-dark-600 hover:border-emerald-500 transition relative group shadow">
+                <img src="${img.url}" class="w-full h-full object-cover">
+                <span class="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-center truncate px-1 text-slate-300 font-mono">${img.engine}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error("Recent jobs error", e);
+      }
+    }
+
+    function previewPastJob(url, engine, seed, time, promptEnc) {
+      document.getElementById('viewport-empty').classList.add('hidden');
+      document.getElementById('viewport-result').classList.remove('hidden');
+      document.getElementById('main-output-img').src = url;
+      document.getElementById('out-model-badge').textContent = (engine || 'SDXL').toUpperCase();
+      document.getElementById('out-time-badge').textContent = time ? `${time}s` : 'GPU Local';
+      document.getElementById('out-prompt-text').textContent = promptEnc ? decodeURIComponent(promptEnc) : (seed || 'Imagem Salva');
+      document.getElementById('out-seed-text').textContent = seed ? `Arquivo: ${seed}` : '';
+      document.getElementById('out-download-btn').href = url;
+    }
+
+    // -------------------------------------------------------------------------
+    // ASSETS MANAGER (TAB 5)
+    // -------------------------------------------------------------------------
+    async function loadAssetsManager() {
+      await loadAssets();
+      const grid = document.getElementById('assets-grid');
+      const all = [...cachedCharacters.map(c => ({...c, type: 'personagem'})), ...cachedLocations.map(l => ({...l, type: 'cenário'}))];
+      
+      grid.innerHTML = all.map(a => `
+        <div class="bg-dark-900 border border-dark-700 rounded-xl p-3 flex flex-col gap-2">
+          <img src="${a.url}" class="w-full aspect-square rounded-lg object-cover border border-dark-600">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs text-slate-200 truncate">${a.name}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded ${a.type === 'personagem' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">${a.type}</span>
+          </div>
+          <span class="font-mono text-[10px] text-slate-400 truncate">ID: ${a.id}</span>
+        </div>
+      `).join('');
+    }
+
+    async function submitNewAsset() {
+      const type = document.getElementById('upload-asset-type').value;
+      const id = document.getElementById('upload-asset-id').value.trim();
+      const name = document.getElementById('upload-asset-name').value.trim();
+      const desc = document.getElementById('upload-asset-desc').value.trim();
+      const fileInput = document.getElementById('upload-asset-file');
+
+      if (!id || !name || !fileInput.files[0]) {
+        return alert("Preencha o ID, Nome e selecione um arquivo de imagem!");
+      }
+
+      const formData = new FormData();
+      formData.append('id', id);
+      formData.append('name', name);
+      formData.append('description', desc);
+      formData.append('file', fileInput.files[0]);
+
+      if (type === 'characters') {
+        formData.append('default_prompt_modifier', desc);
+      } else {
+        formData.append('style_notes', desc);
+      }
+
+      try {
+        const res = await fetch(`/api/v1/assets/${type}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Erro ao salvar âncora");
+        }
+
+        alert("Âncora salva com sucesso!");
+        document.getElementById('upload-asset-id').value = "";
+        document.getElementById('upload-asset-name').value = "";
+        document.getElementById('upload-asset-desc').value = "";
+        fileInput.value = "";
+        loadAssetsManager();
+      } catch (e) {
+        alert("Erro ao enviar âncora: " + e.message);
+      }
+    }
+
+    function openFullImage(url) {
+      window.open(url, '_blank');
+    }
+
+    // -------------------------------------------------------------------------
+    // INITIALIZATION
+    // -------------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      checkSystemHealth();
+      setInterval(checkSystemHealth, 3000);
+      loadAssets();
+      loadRecentJobs();
+    });
+  </script>
+</body>
+</html>

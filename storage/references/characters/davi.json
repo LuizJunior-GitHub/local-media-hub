@@ -1,0 +1,13 @@
+{
+  "id": "davi",
+  "name": "Rei Davi",
+  "description": "Jovem rei Davi tocando a harpa de ouro em trajes nobres de Jerusalém",
+  "image_filename": "davi.png",
+  "file_path": "D:\\GitHub\\local-media-hub\\storage\\references\\characters\\davi.png",
+  "url": "/references/characters/davi.png",
+  "default_prompt_modifier": "young king david, golden harp, royal ancient robes, candlelight, photorealistic 8k portrait",
+  "width": 1024,
+  "height": 1024,
+  "created_at": "2026-10-11T18:37:54.464002+00:00",
+  "updated_at": "2026-10-11T18:37:54.464013+00:00"
+}
