@@ -33,9 +33,16 @@ ENV/
 .coverage
 htmlcov/
 
-# Generated outputs
+# Storage & Media (strictly no images in git/backup)
 storage/outputs/*
 !storage/outputs/.gitkeep
+!storage/references/**/.gitkeep
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+
 
 # AI Models & Large Weights
 *.safetensors
