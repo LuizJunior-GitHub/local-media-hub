@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     Loads settings from .env file or environment variables with strict typing.
     """
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=PROJECT_ROOT / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     app_name: str = "Local Media Hub"
     app_env: Literal["development", "production", "test"] = "development"
     debug: bool = True
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"
     port: int = 8000
     cors_origins: Union[List[str], str] = ["*"]
 
@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     comfyui_ssl: bool = False
     comfyui_client_id: str = "local-media-hub-worker"
     comfyui_timeout_seconds: int = 360
+    comfyui_output_dir: Path = Path(r"C:\ComfyUI\ComfyUI_windows_portable\ComfyUI\output")
 
     # Hardware & GPU Resource Management
     # Target: AMD Radeon RX 7800 XT (16 GB GDDR6) via DirectML / ROCm
@@ -41,7 +42,7 @@ class Settings(BaseSettings):
     gpu_vram_gb: int = 16
     gpu_backend: Literal["directml", "rocm", "cuda", "cpu"] = "directml"
     max_concurrent_gpu_jobs: int = 1  # Strict lock for single-GPU 16GB VRAM safety
-    demo_fallback: bool = True  # Allows UI and pipeline testing when ComfyUI backend is offline
+    demo_fallback: bool = False  # Production must never return a simulated success.
 
     # Default Models
     default_sdxl_model: str = "juggernautXL_v9Rundiffusion.safetensors"
@@ -49,6 +50,12 @@ class Settings(BaseSettings):
     default_clip_l: str = "clip_l.safetensors"
     default_t5_xxl: str = "t5xxl_fp8_e4m3fn.safetensors"
     default_flux_vae: str = "ae.safetensors"
+    default_klein_model: str = "flux-2-klein-4b-fp8.safetensors"
+    default_klein_clip: str = "qwen_3_4b_fp8_mixed.safetensors"
+    default_klein_vae: str = "flux2-vae.safetensors"
+    default_qwen_edit_model: str = "qwen-image-edit-2511-Q4_K_M.gguf"
+    default_qwen_edit_clip: str = "qwen_2.5_vl_7b_fp8_scaled.safetensors"
+    default_qwen_edit_vae: str = "qwen_image_vae.safetensors"
     default_ipadapter_face_model: str = "ip-adapter-faceid-plusv2_sdxl.bin"
     default_controlnet_depth_model: str = "controlnet-depth-sdxl-1.0.safetensors"
 

@@ -1,0 +1,26 @@
+[
+  {
+    "repo": "black-forest-labs/FLUX.2-klein-4b-fp8",
+    "revision": "5b4408e59397a4a37ccb46afe426d8ed86379441",
+    "file": "flux-2-klein-4b-fp8.safetensors",
+    "size": 4070624520,
+    "sha256": "97ed34fe0567e436200f2faee3939b88f2b5d99f8af2a4dc16532c4245c0ccb6",
+    "local_path": "C:\\ComfyUI\\ComfyUI_windows_portable\\ComfyUI\\models\\diffusion_models\\flux-2-klein-4b-fp8.safetensors"
+  },
+  {
+    "repo": "Comfy-Org/z_image_turbo",
+    "revision": "6fc90a3b1b653e935a0d175e260736de25b84df5",
+    "file": "split_files/text_encoders/qwen_3_4b_fp8_mixed.safetensors",
+    "size": 5631994051,
+    "sha256": "72450b19758172c5a7273cf7de729d1c17e7f434a104a00167624cba94f68f15",
+    "local_path": "C:\\ComfyUI\\ComfyUI_windows_portable\\ComfyUI\\models\\text_encoders\\qwen_3_4b_fp8_mixed.safetensors"
+  },
+  {
+    "repo": "Comfy-Org/flux2-klein-4b",
+    "revision": "5f526678002e43af5551dadb73ce2e8c91b43afe",
+    "file": "split_files/vae/flux2-vae.safetensors",
+    "size": 336211292,
+    "sha256": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3",
+    "local_path": "C:\\ComfyUI\\ComfyUI_windows_portable\\ComfyUI\\models\\vae\\flux2-vae.safetensors"
+  }
+]

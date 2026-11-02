@@ -156,6 +156,49 @@ class TemplateEngine:
     # --------------------------------------------------------------------------
     # Character Consistency
     # --------------------------------------------------------------------------
+    def build_klein_workflow(self, prompt: str, seed: Optional[int] = None,
+                             width: int = 1024, height: int = 576, reference_images=None,
+                             steps: int = 4) -> Tuple[Dict[str, Any], int]:
+        """Official FLUX.2 Klein distilled graph with real multi-image latents.
+
+        Each reference is VAE encoded and appended to BOTH positive and zero
+        conditioning, following Comfy-Org's multi-image distilled template.
+        Output framing is independent of the reference portrait/environment.
+        """
+        if width % 16 or height % 16 or not (256 <= width <= 2048 and 256 <= height <= 2048):
+            raise ValueError("Klein dimensions must be multiples of 16 between 256 and 2048")
+        if type(steps) is not int or not 1<=steps<=16:
+            raise ValueError('Klein steps must be an integer between 1 and 16')
+        refs = reference_images or []
+        if len(refs)>6:
+            raise ValueError("At most six approved reference images per scene on this GPU")
+        final_seed=self.resolve_seed(seed)
+        def node(kind,**inputs):return {"class_type":kind,"inputs":inputs}
+        wf={"1":node("UNETLoader",unet_name=self.settings.default_klein_model,weight_dtype="default"),
+            "2":node("CLIPLoader",clip_name=self.settings.default_klein_clip,type="flux2",device="default"),
+            "3":node("VAELoader",vae_name=self.settings.default_klein_vae),
+            "4":node("CLIPTextEncode",clip=["2",0],text=prompt),
+            "5":node("ConditioningZeroOut",conditioning=["4",0]),
+            "6":node("EmptyFlux2LatentImage",width=width,height=height,batch_size=1),
+            "7":node("Flux2Scheduler",steps=steps,width=width,height=height),
+            "8":node("KSamplerSelect",sampler_name="euler"),
+            "9":node("RandomNoise",noise_seed=final_seed)}
+        positive,negative=["4",0],["5",0]
+        for index,filename in enumerate(refs):
+            base=20+index*5
+            load,scale,encode,pos,neg=map(str,range(base,base+5))
+            wf[load]=node("LoadImage",image=filename)
+            wf[scale]=node("ImageScaleToTotalPixels",image=[load,0],upscale_method="lanczos",megapixels=.25,resolution_steps=16)
+            wf[encode]=node("VAEEncode",pixels=[scale,0],vae=["3",0])
+            wf[pos]=node("ReferenceLatent",conditioning=positive,latent=[encode,0])
+            wf[neg]=node("ReferenceLatent",conditioning=negative,latent=[encode,0])
+            positive,negative=[pos,0],[neg,0]
+        wf["10"]=node("CFGGuider",model=["1",0],positive=positive,negative=negative,cfg=1.0)
+        wf["11"]=node("SamplerCustomAdvanced",noise=["9",0],guider=["10",0],sampler=["8",0],sigmas=["7",0],latent_image=["6",0])
+        wf["12"]=node("VAEDecode",samples=["11",0],vae=["3",0])
+        wf["13"]=node("SaveImage",images=["12",0],filename_prefix="LMH_KLEIN")
+        return wf,final_seed
+
     def build_character_workflow(
         self,
         anchor_image_filename: str,

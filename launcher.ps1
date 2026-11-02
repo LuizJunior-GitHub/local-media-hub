@@ -3,6 +3,7 @@
 # Automatically checks & launches ComfyUI (AMD GPU engine) and Local Media Hub.
 # ==============================================================================
 
+param([switch]$NoBrowser)
 $ErrorActionPreference = "SilentlyContinue"
 $projectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $hubUrl = "http://127.0.0.1:8000"
@@ -26,7 +27,7 @@ if (-not (Test-UrlOnline $comfyStatsUrl)) {
         $psiComfy.FileName = "$comfyDir\python_embeded\python.exe"
         $psiComfy.Arguments = "-s ComfyUI\main.py --windows-standalone-build --listen 127.0.0.1 --port 8188 --disable-triton-backend --use-split-cross-attention"
         $psiComfy.WorkingDirectory = $comfyDir
-        $psiComfy.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Minimized
+        $psiComfy.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
         [System.Diagnostics.Process]::Start($psiComfy) | Out-Null
     }
 }
@@ -37,7 +38,7 @@ if (-not (Test-UrlOnline $healthUrl)) {
     $psiHub.FileName = "python"
     $psiHub.Arguments = "main.py"
     $psiHub.WorkingDirectory = $projectDir
-    $psiHub.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Minimized
+    $psiHub.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
     [System.Diagnostics.Process]::Start($psiHub) | Out-Null
 
     # Aguarda o Hub responder
@@ -53,4 +54,4 @@ if (-not (Test-UrlOnline $healthUrl)) {
 }
 
 # 3. Abre a interface web no navegador padrão
-Start-Process $hubUrl
+if (-not $NoBrowser) { Start-Process $hubUrl }

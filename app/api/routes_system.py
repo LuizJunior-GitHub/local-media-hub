@@ -8,6 +8,11 @@ from app.engine.comfy_client import ComfyUIClient, get_comfy_client
 router = APIRouter(prefix="/api/v1/system", tags=["System & GPU"])
 
 
+@router.get("/capabilities")
+async def capabilities(comfy_client: ComfyUIClient = Depends(get_comfy_client)):
+    return await comfy_client.capabilities()
+
+
 @router.get("/health", summary="Overall service health check")
 async def health_check(
     settings: Settings = Depends(get_settings),

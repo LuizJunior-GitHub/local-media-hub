@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-11",
+  "project_id": "quiz-facil-40-local",
+  "transport": "native MCP",
+  "tests_passed": 41,
+  "ui_controls": [
+    "Ficha visual",
+    "Ver prompt usado",
+    "Exigir ficha visual",
+    "Separate image preview and approval",
+    "Retirar aprovação"
+  ],
+  "verified": [
+    "UI saved Noe profile and MCP read it",
+    "Noe and Adan original prompts and old images preserved",
+    "Two new candidates per character completed through MCP",
+    "Unfilled Eva profile blocked before generation",
+    "No automatic approval of new candidates"
+  ],
+  "profiles": {
+    "char_noe": {
+      "context": "Representación artística bíblica con referencias visuales del antiguo Cercano Oriente; no atribuir una fisionomía históricamente documentada",
+      "apparent_age": "Anciano de unos 70 a 80 años de apariencia, vigoroso; no representar literalmente la edad cronológica del relato",
+      "skin": "Morena oliva cálida, curtida por el sol, poros y pequeñas manchas naturales",
+      "face": "Rostro ancho y alargado, nariz ligeramente aquilina, pómulos marcados, frente amplia, arrugas profundas en frente y contorno de los ojos, cejas espesas grises",
+      "eyes": "Marrón oscuro, mirada serena y firme, sin ojos azules",
+      "hair": "Gris con mechones blancos, ondulado y abundante hasta los hombros, textura natural poco arreglada",
+      "facial_hair": "Barba blanca y gris MUY LARGA, abundante y ondulada, de unos 25 centímetros, cuelga desde la mandíbula hasta la mitad del pecho y cubre la parte central del tejido; bigote espeso conectado",
+      "build": "Hombros anchos, constitución robusta de trabajador, sin musculatura de gimnasio",
+      "clothing": "Prenda artesanal de lino arena hecha de paños rectangulares; tela continua cubre todo el pecho, escote ancho cerrado y sencillo. Manto de lana marrón envuelve los hombros en grandes pliegues y cruza sobre el pecho. Superficie visible únicamente de tela, sin ningún cierre, adorno, abertura frontal o piezas metálicas",
+      "distinctive_features": "Barba gris blanca de 25 centímetros que cubre el pecho, cabello gris ondulado hasta hombros, arrugas profundas, nariz ligeramente aquilina",
+      "avoid": "Peinado moderno, degradado de barbería, barba corta perfectamente recortada, camisa moderna, costura industrial, botones, bolsillos, joyas, medallones, reloj, piel de publicidad retocada, corona, halo, herramientas o arca en este retrato"
+    },
+    "char_adan": {
+      "context": "Representación artística de Adán para el proyecto bíblico; apariencia elegida por dirección artística, sin afirmar una etnia o fisionomía histórica conocida",
+      "apparent_age": "Adulto de unos 30 a 35 años de apariencia",
+      "skin": "Morena cobriza oliva cálida, textura de piel real, poros y leves marcas naturales de exposición al sol",
+      "face": "Rostro ancho, pómulos definidos, mandíbula fuerte, nariz recta ancha, cejas oscuras espesas y naturales",
+      "eyes": "Marrón oscuro, expresión tranquila y atenta",
+      "hair": "Cabello negro castaño oscuro, abundante y rizado, con mechones irregulares hasta los hombros, un poco despeinado, sin raya simétrica",
+      "facial_hair": "Barba oscura tupida y larga hasta las clavículas, mechones irregulares y bordes naturales asimétricos, bigote denso conectado, mejillas con pelo natural sin líneas dibujadas",
+      "build": "Constitución fuerte y proporcionada, hombros amplios, sin aspecto de modelo fitness",
+      "clothing": "Paño artesanal de lana marrón arena dispuesto en pliegues grandes sobre ambos hombros y cruzado cubriendo el pecho, textura gruesa de tejido manual, una sola superficie de tela sin cuello de camiseta o camisa, sin cierres ni adornos",
+      "distinctive_features": "Piel cobriza oliva cálida, cabello oscuro ondulado hasta los hombros, cejas espesas y mandíbula fuerte",
+      "avoid": "Camisa contemporánea, bolsillos, botones, joyas, medallones, reloj, peluquería moderna, peinado pulido, barba delineada, rostro de publicidad retocado, halo, corona, paisaje del Edén en este retrato"
+    }
+  },
+  "jobs": [
+    {
+      "character": "char_noe",
+      "job_id": "dea2858f-19ab-4bd4-8081-6a1b4c8f2d7e",
+      "status": "completed",
+      "prompt": "Retrato de referencia visual de Noé. Interpretación artística para el proyecto; la fisionomía no se presenta como una reconstrucción histórica documentada.\nDirección artística: Representación artística bíblica con referencias visuales del antiguo Cercano Oriente; no atribuir una fisionomía históricamente documentada.\nEdad aparente: Anciano de unos 70 a 80 años de apariencia, vigoroso; no representar literalmente la edad cronológica del relato.\nPiel: Morena oliva cálida, curtida por el sol, poros y pequeñas manchas naturales.\nRostro: Rostro ancho y alargado, nariz ligeramente aquilina, pómulos marcados, frente amplia, arrugas profundas en frente y contorno de los ojos, cejas espesas grises.\nOjos: Marrón oscuro, mirada serena y firme, sin ojos azules.\nCabello: Gris con mechones blancos, ondulado y abundante hasta los hombros, textura natural poco arreglada.\nVello facial: Barba larga y tupida gris y blanca hasta la parte alta del pecho, bigote espeso unido a la barba; sin delineado de barbería.\nConstitución: Hombros anchos, constitución robusta de trabajador, sin musculatura de gimnasio.\nVestuario: Túnica sencilla de lino crudo color arena, tejido grueso hecho a mano, corte recto y abertura simple en el cuello, sin cuello de camisa, sin botones, sin tapeta, sin bolsillos; manto de lana marrón mate sobre los hombros.\nRasgos de identidad: Cabello gris hasta hombros, barba larga gris blanca, nariz ligeramente aquilina y arrugas marcadas.\nEvitar: Peinado moderno, degradado de barbería, barba corta perfectamente recortada, camisa moderna, costura industrial, botones, bolsillos, joyas, medallones, reloj, piel de publicidad retocada, corona, halo, herramientas o arca en este retrato.\nUna sola persona, encuadre desde el pecho hasta la cabeza completa, rostro claramente visible, mirada al frente, expresión natural, luz frontal neutra y suave, fondo liso gris sin edificios, sin acción narrativa ni herramientas, manos fuera del encuadre. Fotografía cinematográfica realista, textura natural de piel y tejidos, sin retoque de belleza. NO TEXT, NO LETTERS, NO LOGO, NO WATERMARK.",
+      "seconds": 15.18,
+      "images": [
+        {
+          "filename": "out_d6fdc969_LMH_KLEIN_00021_.png",
+          "subfolder": "",
+          "url": "/outputs/out_d6fdc969_LMH_KLEIN_00021_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_d6fdc969_LMH_KLEIN_00021_.png",
+          "content_type": "image/png",
+          "size_bytes": 1002587,
+          "width": 768,
+          "height": 768,
+          "seed": 730021
+        }
+      ]
+    },
+    {
+      "character": "char_noe",
+      "job_id": "c2108e3d-4dc2-410d-9f6b-640956c90cd1",
+      "status": "completed",
+      "prompt": "Retrato de referencia visual de Noé. Interpretación artística para el proyecto; la fisionomía no se presenta como una reconstrucción histórica documentada.\nDirección artística: Representación artística bíblica con referencias visuales del antiguo Cercano Oriente; no atribuir una fisionomía históricamente documentada.\nEdad aparente: Anciano de unos 70 a 80 años de apariencia, vigoroso; no representar literalmente la edad cronológica del relato.\nPiel: Morena oliva cálida, curtida por el sol, poros y pequeñas manchas naturales.\nRostro: Rostro ancho y alargado, nariz ligeramente aquilina, pómulos marcados, frente amplia, arrugas profundas en frente y contorno de los ojos, cejas espesas grises.\nOjos: Marrón oscuro, mirada serena y firme, sin ojos azules.\nCabello: Gris con mechones blancos, ondulado y abundante hasta los hombros, textura natural poco arreglada.\nVello facial: Barba blanca y gris MUY LARGA, abundante y ondulada, de unos 25 centímetros, cuelga desde la mandíbula hasta la mitad del pecho y cubre la parte central del tejido; bigote espeso conectado.\nConstitución: Hombros anchos, constitución robusta de trabajador, sin musculatura de gimnasio.\nVestuario: Prenda artesanal de lino arena hecha de paños rectangulares; tela continua cubre todo el pecho, escote ancho cerrado y sencillo. Manto de lana marrón envuelve los hombros en grandes pliegues y cruza sobre el pecho. Superficie visible únicamente de tela, sin ningún cierre, adorno, abertura frontal o piezas metálicas.\nRasgos de identidad: Barba gris blanca de 25 centímetros que cubre el pecho, cabello gris ondulado hasta hombros, arrugas profundas, nariz ligeramente aquilina.\nEvitar: Peinado moderno, degradado de barbería, barba corta perfectamente recortada, camisa moderna, costura industrial, botones, bolsillos, joyas, medallones, reloj, piel de publicidad retocada, corona, halo, herramientas o arca en este retrato.\nUna sola persona, encuadre desde el pecho hasta la cabeza completa, rostro claramente visible, mirada al frente, expresión natural, luz frontal neutra y suave, fondo liso gris sin edificios, sin acción narrativa ni herramientas, manos fuera del encuadre. Fotografía cinematográfica realista, textura natural de piel y tejidos, sin retoque de belleza. NO TEXT, NO LETTERS, NO LOGO, NO WATERMARK.",
+      "seconds": 8.09,
+      "images": [
+        {
+          "filename": "out_e9b863b6_LMH_KLEIN_00023_.png",
+          "subfolder": "",
+          "url": "/outputs/out_e9b863b6_LMH_KLEIN_00023_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_e9b863b6_LMH_KLEIN_00023_.png",
+          "content_type": "image/png",
+          "size_bytes": 1003296,
+          "width": 768,
+          "height": 768,
+          "seed": 730021
+        }
+      ]
+    },
+    {
+      "character": "char_adan",
+      "job_id": "48348c6c-57bb-4b14-a55d-cefaac51f33b",
+      "status": "completed",
+      "prompt": "Retrato de referencia visual de Adán. Interpretación artística para el proyecto; la fisionomía no se presenta como una reconstrucción histórica documentada.\nDirección artística: Representación artística de Adán para el proyecto bíblico; apariencia elegida por dirección artística, sin afirmar una etnia o fisionomía histórica conocida.\nEdad aparente: Adulto de unos 30 a 35 años de apariencia.\nPiel: Morena cobriza oliva cálida, textura natural de piel, sin bronceado cosmético.\nRostro: Rostro ancho, pómulos definidos, mandíbula fuerte, nariz recta ancha, cejas oscuras espesas y naturales.\nOjos: Marrón oscuro, expresión tranquila y atenta.\nCabello: Castaño muy oscuro casi negro, ondulado y voluminoso hasta los hombros, sin raya de peluquería, sin degradado.\nVello facial: Barba completa oscura de longitud moderada, natural, sin contornos de barbería ni aspecto de barba de tres días.\nConstitución: Constitución fuerte y proporcionada, hombros amplios, sin aspecto de modelo fitness.\nVestuario: Para esta ficha visual discreta: tejido sencillo marrón claro de apariencia artesanal cubriendo hombros y pecho, corte rectangular sin cuello de camisa, sin botones, sin tapeta ni bolsillos. El vestuario de las escenas se adaptará a la fase del relato.\nRasgos de identidad: Piel cobriza oliva cálida, cabello oscuro ondulado hasta los hombros, cejas espesas y mandíbula fuerte.\nEvitar: Camisa contemporánea, bolsillos, botones, joyas, medallones, reloj, peluquería moderna, peinado pulido, barba delineada, rostro de publicidad retocado, halo, corona, paisaje del Edén en este retrato.\nUna sola persona, encuadre desde el pecho hasta la cabeza completa, rostro claramente visible, mirada al frente, expresión natural, luz frontal neutra y suave, fondo liso gris sin edificios, sin acción narrativa ni herramientas, manos fuera del encuadre. Fotografía cinematográfica realista, textura natural de piel y tejidos, sin retoque de belleza. NO TEXT, NO LETTERS, NO LOGO, NO WATERMARK.",
+      "seconds": 8.09,
+      "images": [
+        {
+          "filename": "out_22337694_LMH_KLEIN_00022_.png",
+          "subfolder": "",
+          "url": "/outputs/out_22337694_LMH_KLEIN_00022_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_22337694_LMH_KLEIN_00022_.png",
+          "content_type": "image/png",
+          "size_bytes": 903942,
+          "width": 768,
+          "height": 768,
+          "seed": 730022
+        }
+      ]
+    },
+    {
+      "character": "char_adan",
+      "job_id": "d00535f8-2b19-4040-82fe-5adba3a33931",
+      "status": "completed",
+      "prompt": "Retrato de referencia visual de Adán. Interpretación artística para el proyecto; la fisionomía no se presenta como una reconstrucción histórica documentada.\nDirección artística: Representación artística de Adán para el proyecto bíblico; apariencia elegida por dirección artística, sin afirmar una etnia o fisionomía histórica conocida.\nEdad aparente: Adulto de unos 30 a 35 años de apariencia.\nPiel: Morena cobriza oliva cálida, textura de piel real, poros y leves marcas naturales de exposición al sol.\nRostro: Rostro ancho, pómulos definidos, mandíbula fuerte, nariz recta ancha, cejas oscuras espesas y naturales.\nOjos: Marrón oscuro, expresión tranquila y atenta.\nCabello: Cabello negro castaño oscuro, abundante y rizado, con mechones irregulares hasta los hombros, un poco despeinado, sin raya simétrica.\nVello facial: Barba oscura tupida y larga hasta las clavículas, mechones irregulares y bordes naturales asimétricos, bigote denso conectado, mejillas con pelo natural sin líneas dibujadas.\nConstitución: Constitución fuerte y proporcionada, hombros amplios, sin aspecto de modelo fitness.\nVestuario: Paño artesanal de lana marrón arena dispuesto en pliegues grandes sobre ambos hombros y cruzado cubriendo el pecho, textura gruesa de tejido manual, una sola superficie de tela sin cuello de camiseta o camisa, sin cierres ni adornos.\nRasgos de identidad: Piel cobriza oliva cálida, cabello oscuro ondulado hasta los hombros, cejas espesas y mandíbula fuerte.\nEvitar: Camisa contemporánea, bolsillos, botones, joyas, medallones, reloj, peluquería moderna, peinado pulido, barba delineada, rostro de publicidad retocado, halo, corona, paisaje del Edén en este retrato.\nUna sola persona, encuadre desde el pecho hasta la cabeza completa, rostro claramente visible, mirada al frente, expresión natural, luz frontal neutra y suave, fondo liso gris sin edificios, sin acción narrativa ni herramientas, manos fuera del encuadre. Fotografía cinematográfica realista, textura natural de piel y tejidos, sin retoque de belleza. NO TEXT, NO LETTERS, NO LOGO, NO WATERMARK.",
+      "seconds": 15.19,
+      "images": [
+        {
+          "filename": "out_938e280c_LMH_KLEIN_00024_.png",
+          "subfolder": "",
+          "url": "/outputs/out_938e280c_LMH_KLEIN_00024_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_938e280c_LMH_KLEIN_00024_.png",
+          "content_type": "image/png",
+          "size_bytes": 940333,
+          "width": 768,
+          "height": 768,
+          "seed": 730022
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Artistic choices, not documented historical physiognomies",
+    "Adan beard still shorter/more groomed than requested",
+    "Only Noe/Adan profiles filled in this demonstration; other character profiles need explicit direction",
+    "New portraits require human visual approval"
+  ]
+}

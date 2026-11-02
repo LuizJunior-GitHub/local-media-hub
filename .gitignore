@@ -54,3 +54,7 @@ storage/outputs/*
 
 # Temporary scripts
 generate_flux_test.py
+storage/jobs/
+storage/projects/
+storage/runtime/
+work_codex/

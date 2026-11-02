@@ -1,0 +1,74 @@
+{
+  "project_id": "exodo-comparacao-passos-20261011",
+  "transport": "native MCP",
+  "controlled_variables": [
+    "same prompt per scene",
+    "same explicit seed per scene",
+    "same reference images and order",
+    "1024x576",
+    "same model/sampler/CFG",
+    "only Flux2Scheduler.steps changed"
+  ],
+  "passed": true,
+  "records": [
+    {
+      "slot": "001P",
+      "steps": 4,
+      "seed": 1392784335,
+      "job_id": "19d8fb8a-ce0c-4c5d-953a-938e788e8b5f",
+      "seconds": 8.14,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_dee94d78_LMH_KLEIN_00013_.png",
+      "reference_count": 0
+    },
+    {
+      "slot": "023R",
+      "steps": 4,
+      "seed": 2133781350,
+      "job_id": "6501031f-1f39-49bf-826c-e8f33ede80e8",
+      "seconds": 18.3,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_e25205fd_LMH_KLEIN_00014_.png",
+      "reference_count": 3
+    },
+    {
+      "slot": "001P",
+      "steps": 8,
+      "seed": 1392784335,
+      "job_id": "69fe871f-cb2f-4463-b620-c3b81784912f",
+      "seconds": 10.14,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_34077568_LMH_KLEIN_00015_.png",
+      "reference_count": 0
+    },
+    {
+      "slot": "023R",
+      "steps": 8,
+      "seed": 2133781350,
+      "job_id": "a2935bd4-b332-4052-be27-bec679f47ddc",
+      "seconds": 42.46,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_a2b5caf9_LMH_KLEIN_00016_.png",
+      "reference_count": 3
+    },
+    {
+      "slot": "001P",
+      "steps": 12,
+      "seed": 1392784335,
+      "job_id": "cea20d26-e5d9-4c04-923e-6b0bdfa6a4b5",
+      "seconds": 21.26,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_3c7a9f08_LMH_KLEIN_00017_.png",
+      "reference_count": 0
+    },
+    {
+      "slot": "023R",
+      "steps": 12,
+      "seed": 2133781350,
+      "job_id": "1af9576e-96b1-4f5e-a638-fce79d7ba8d7",
+      "seconds": 61.97,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_75c7c452_LMH_KLEIN_00018_.png",
+      "reference_count": 3
+    }
+  ],
+  "observations": {
+    "hands_mixing_clay": "Pose and texture changed; overlap and partial occlusion remain. No clear proof of correct finger counts.",
+    "moses_tablets": "8/12 steps move hands to tops of tablets and crop face; add neck accessory. 4 steps preserves face framing. No consistent overall quality gain."
+  },
+  "limitations": "Two scenes, one seed each; qualitative visual review, not a model-wide benchmark."
+}

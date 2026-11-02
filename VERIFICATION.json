@@ -1,0 +1,110 @@
+{
+  "passed": true,
+  "transport": "MCP stdio",
+  "tools": [
+    "get_system_status",
+    "get_capabilities",
+    "generate_image",
+    "get_job",
+    "list_jobs",
+    "reconcile_job",
+    "cancel_job",
+    "list_anchors",
+    "import_quiz_manifest",
+    "generate_quiz_slot",
+    "export_quiz_project"
+  ],
+  "quiz_jobs": [
+    {
+      "job_id": "b26191eb-bc06-4d06-aa04-76581b06cbee",
+      "status": "completed",
+      "seconds": 27.06,
+      "native_size": [
+        1024,
+        576
+      ]
+    },
+    {
+      "job_id": "9de5e690-5cf3-4933-a4ac-7da073c78485",
+      "status": "completed",
+      "seconds": 23.3,
+      "native_size": [
+        1024,
+        576
+      ]
+    },
+    {
+      "job_id": "18186f0e-b26e-4800-a264-7a1b0a3e33ef",
+      "status": "completed",
+      "seconds": 21.37,
+      "native_size": [
+        1024,
+        576
+      ]
+    },
+    {
+      "job_id": "658a026a-3a85-4598-970e-6d825de23782",
+      "status": "completed",
+      "seconds": 24.35,
+      "native_size": [
+        1024,
+        576
+      ]
+    }
+  ],
+  "generic_job": {
+    "job_id": "bdd4dcbb-2795-4507-8333-a70a218c49ca",
+    "seconds": 25.31,
+    "sampling_steps": 4,
+    "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_8e5a9efd_LMH_FLUX_00007_.png"
+  },
+  "exports": {
+    "project_id": "teste-mcp-arca-20261011",
+    "directory": "D:\\GitHub\\local-media-hub\\storage\\projects\\teste-mcp-arca-20261011",
+    "files": [
+      {
+        "source_index": "001P",
+        "filename": "001P.png",
+        "file_path": "D:\\GitHub\\local-media-hub\\storage\\projects\\teste-mcp-arca-20261011\\001P.png",
+        "job_id": "b26191eb-bc06-4d06-aa04-76581b06cbee",
+        "seed": 7112026,
+        "engine": "flux_schnell"
+      },
+      {
+        "source_index": "001R",
+        "filename": "001R.png",
+        "file_path": "D:\\GitHub\\local-media-hub\\storage\\projects\\teste-mcp-arca-20261011\\001R.png",
+        "job_id": "9de5e690-5cf3-4933-a4ac-7da073c78485",
+        "seed": 7112027,
+        "engine": "flux_schnell"
+      },
+      {
+        "source_index": "001P_bg",
+        "filename": "001P_bg.png",
+        "file_path": "D:\\GitHub\\local-media-hub\\storage\\projects\\teste-mcp-arca-20261011\\001P_bg.png",
+        "job_id": "18186f0e-b26e-4800-a264-7a1b0a3e33ef",
+        "seed": 7112028,
+        "engine": "flux_schnell"
+      },
+      {
+        "source_index": "001R_bg",
+        "filename": "001R_bg.png",
+        "file_path": "D:\\GitHub\\local-media-hub\\storage\\projects\\teste-mcp-arca-20261011\\001R_bg.png",
+        "job_id": "658a026a-3a85-4598-970e-6d825de23782",
+        "seed": 7112029,
+        "engine": "flux_schnell"
+      }
+    ],
+    "missing": [],
+    "native_size": "1024x576",
+    "export_size": "1920x1080",
+    "resized": true
+  },
+  "tests_passed": 28,
+  "review": "Antigravity textual review; fixes independently tested by Codex",
+  "limitations": [
+    "IPAdapterFaceID absent; ControlNet weights absent; reference-dependent slots are blocked",
+    "1920x1080 quiz exports are resized from 1024x576",
+    "Native tool catalog of original running Codex conversation has not reloaded; actual MCP protocol verified via official client"
+  ]
+}

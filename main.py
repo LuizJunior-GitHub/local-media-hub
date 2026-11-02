@@ -9,9 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-from app.api import routes_assets, routes_generate, routes_system
+from app.api import routes_assets, routes_generate, routes_system, routes_quiz, routes_production
 from app.core.config import get_settings
 from app.core.queue_manager import get_queue_manager
+from app.core.queue_manager import JobConflict, QueueBlocked
 from app.engine.comfy_client import get_comfy_client
 
 logging.basicConfig(
@@ -47,6 +48,8 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("Shutting down Local Media Hub...")
+    from app.services.quiz_production import stop_batches
+    await stop_batches()
     await queue_mgr.stop()
     await comfy_client.close()
     logger.info("Shutdown complete.")
@@ -65,6 +68,13 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+    from fastapi.responses import JSONResponse
+    @app.exception_handler(JobConflict)
+    async def job_conflict(request, exc):
+        return JSONResponse(status_code=409, content={"detail":str(exc)})
+    @app.exception_handler(QueueBlocked)
+    async def queue_blocked(request, exc):
+        return JSONResponse(status_code=409, content={"detail":str(exc)})
 
     # CORS configuration
     app.add_middleware(
@@ -78,6 +88,8 @@ def create_app() -> FastAPI:
     # Mount static storage for image distribution
     app.mount("/outputs", StaticFiles(directory=str(settings.storage_outputs_dir)), name="outputs")
     app.mount("/references", StaticFiles(directory=str(settings.storage_base_dir / "references")), name="references")
+    project_dir=settings.storage_base_dir/'projects';project_dir.mkdir(parents=True,exist_ok=True)
+    app.mount('/project-media',StaticFiles(directory=str(project_dir)),name='project-media')
 
     # Serve interactive web studio frontend
     from pathlib import Path
@@ -89,11 +101,16 @@ def create_app() -> FastAPI:
         @app.get("/", include_in_schema=False)
         async def serve_frontend():
             return FileResponse(str(static_dir / "index.html"))
+        @app.get('/quiz',include_in_schema=False)
+        async def serve_quiz():
+            return FileResponse(str(static_dir/'quiz.html'))
 
     # Register API routers
     app.include_router(routes_generate.router)
     app.include_router(routes_assets.router)
     app.include_router(routes_system.router)
+    app.include_router(routes_quiz.router)
+    app.include_router(routes_production.router)
 
     return app
 
@@ -112,9 +129,9 @@ def run_server():
     args = parser.parse_args()
 
     if args.mcp_stdio:
-        from app.mcp.server import run_mcp_stdio_server
+        from mcp_bridge import create_mcp_server
         logger.info("Starting Local Media Hub in MCP STDIO Mode...")
-        asyncio.run(run_mcp_stdio_server())
+        asyncio.run(create_mcp_server().run_stdio_async())
     else:
         settings = get_settings()
         uvicorn.run(

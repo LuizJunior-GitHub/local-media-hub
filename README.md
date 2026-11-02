@@ -1,5 +1,7 @@
 # 🏛️ Local Media Hub (Media Forge Server)
 
+> **Estado verificado em 11/10/2026:** consulte [LOCAL_MCP.md](LOCAL_MCP.md) para a conexão Codex, geração real Flux, tempos medidos e limites. A integração MCP agora encaminha para a fila HTTP única. IPAdapterFaceID e ControlNet ainda não estão instalados; referências não são silenciosamente descartadas. As estimativas e promessas de consistência da descrição inicial abaixo não representam recursos testados neste PC.
+
 > **High-Performance Unified Gateway & Model Context Protocol (MCP) Server for Local GPU-Accelerated Image Generation**  
 > Tailored for **AMD Radeon RX 7800 XT (16 GB GDDR6)** running headless **ComfyUI** on Windows / WSL2 via **DirectML / ROCm**.
 

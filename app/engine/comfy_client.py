@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 import aiohttp
@@ -40,8 +41,8 @@ class ComfyUIClient:
 
     async def get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
-            timeout = aiohttp.ClientTimeout(total=self.settings.comfyui_timeout_seconds)
-            self._session = aiohttp.ClientSession(timeout=timeout)
+            timeout = aiohttp.ClientTimeout(total=25,connect=5,sock_read=15)
+            self._session = aiohttp.ClientSession(timeout=timeout,connector=aiohttp.TCPConnector(limit=8,keepalive_timeout=30))
         return self._session
 
     async def close(self) -> None:
@@ -164,148 +165,183 @@ class ComfyUIClient:
     # --------------------------------------------------------------------------
     # Execution Lifecycle via WebSocket
     # --------------------------------------------------------------------------
-    async def execute_and_wait(
-        self,
-        workflow_prompt: dict,
-        seed: int,
-        on_progress: Optional[Callable[[int, int], Any]] = None,
-    ) -> List[GeneratedImageInfo]:
-        """
-        Execute workflow via ComfyUI, monitor progress in real-time via WebSocket,
-        and retrieve & save generated images to local storage/outputs/.
-        """
-        if not await self.is_healthy():
-            if self.settings.demo_fallback:
-                logger.warning("ComfyUI is offline. Executing generation in local Demo/Simulation Mode.")
-                return await self._simulate_generation(workflow_prompt, seed, on_progress)
-            raise ComfyUIConnectionError(f"Could not connect to ComfyUI at {self.settings.comfy_http_url}")
-
+    async def execute_and_wait(self, workflow_prompt: dict, seed: int, on_progress=None,
+                               on_submitted=None, resume_prompt_id=None, is_cancelled=None) -> List[GeneratedImageInfo]:
         session = await self.get_session()
-        ws_url = self.settings.comfy_ws_url
-
-        try:
-            ws = await session.ws_connect(ws_url)
-        except Exception as e:
-            logger.warning(f"Could not open WebSocket to ComfyUI ({e}). Falling back to polling mode.")
-            ws = None
-
-        prompt_id = await self.queue_prompt(workflow_prompt)
-        logger.info(f"Queued ComfyUI job prompt_id: {prompt_id}")
-
-        generated_images: List[GeneratedImageInfo] = []
-
-        try:
-            if ws is not None:
-                # WebSocket listener mode
+        ws, progress_task = None, None
+        observed_id = resume_prompt_id
+        def submitted(prompt_id):
+            nonlocal observed_id
+            observed_id = prompt_id
+            if on_submitted:
+                on_submitted(prompt_id)
+        async def monitor_progress():
+            try:
                 async for msg in ws:
-                    if msg.type == aiohttp.WSMsgType.TEXT:
-                        try:
-                            event = json.loads(msg.data)
-                        except Exception:
-                            continue
-
-                        event_type = event.get("type")
-                        data = event.get("data", {})
-
-                        if event_type == "progress":
-                            # Current step progress
-                            val = data.get("value", 0)
-                            max_val = data.get("max", 1)
-                            if on_progress:
-                                try:
-                                    res = on_progress(val, max_val)
-                                    if asyncio.iscoroutine(res):
-                                        await res
-                                except Exception as cb_err:
-                                    logger.debug(f"Progress callback exception: {cb_err}")
-
-                        elif event_type == "execution_error":
-                            if data.get("prompt_id") == prompt_id:
-                                exc_msg = data.get("exception_message", "Unknown error")
-                                node_id = data.get("node_id", "unknown")
-                                raise ComfyUIExecutionError(f"Node {node_id} failed: {exc_msg}")
-
-                        elif event_type == "executing":
-                            # When executing node is None and prompt_id matches, run is completed
-                            current_node = data.get("node")
-                            msg_prompt_id = data.get("prompt_id")
-                            if current_node is None and msg_prompt_id == prompt_id:
-                                logger.info(f"Execution finished for prompt_id: {prompt_id}")
-                                break
-                    elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-                        break
-            else:
-                # Polling fallback mode
-                poll_timeout = self.settings.comfyui_timeout_seconds
-                start_time = asyncio.get_event_loop().time()
-                while asyncio.get_event_loop().time() - start_time < poll_timeout:
-                    history = await self.get_history(prompt_id)
-                    if history is not None:
-                        break
-                    await asyncio.sleep(0.5)
-
+                    if msg.type != aiohttp.WSMsgType.TEXT:
+                        continue
+                    event = json.loads(msg.data)
+                    data = event.get("data",{})
+                    if event.get("type")=="progress" and data.get("prompt_id")==observed_id and on_progress:
+                        result=on_progress(data.get("value",0),data.get("max",1))
+                        if asyncio.iscoroutine(result):
+                            await result
+            except (aiohttp.ClientError,ValueError):
+                logger.warning("Progress stream disconnected; durable polling remains active")
+        try:
+            try:
+                ws = await session.ws_connect(self.settings.comfy_ws_url,heartbeat=15,timeout=5)
+                progress_task = asyncio.create_task(monitor_progress())
+            except (aiohttp.ClientError,asyncio.TimeoutError):
+                logger.warning("Progress stream unavailable; using durable polling")
+            return await self._poll_execution(workflow_prompt,seed,on_progress,submitted,resume_prompt_id,is_cancelled)
         finally:
+            if progress_task:
+                progress_task.cancel()
+                try:
+                    await progress_task
+                except asyncio.CancelledError:
+                    pass
             if ws and not ws.closed:
                 await ws.close()
 
-        # Retrieve outputs from history
-        history = await self.get_history(prompt_id)
-        if not history:
-            # Short wait if history is briefly lagging
-            for _ in range(10):
-                await asyncio.sleep(0.5)
+    async def _poll_execution(self, workflow_prompt: dict, seed: int, on_progress=None,
+                               on_submitted=None, resume_prompt_id=None, is_cancelled=None) -> List[GeneratedImageInfo]:
+        """Poll durable Comfy history; losing a client connection never submits twice.
+
+        A slow generation remains active. Individual HTTP requests are bounded;
+        transient failures are monitored without releasing the shared GPU worker.
+        """
+        if self.settings.demo_fallback:
+            raise ComfyUIClientError("Demo fallback must be disabled for production generation")
+        if not await self.is_healthy():
+            raise ComfyUIConnectionError("ComfyUI offline; no simulated image was generated")
+        try:
+            prompt_id = resume_prompt_id or await self.queue_prompt(workflow_prompt)
+        except (ComfyUIConnectionError, asyncio.TimeoutError) as exc:
+            raise ComfyUIExecutionError(f"Uncertain execution: submission acknowledgement lost: {exc}") from exc
+        if on_submitted:
+            on_submitted(prompt_id)
+        offline_since = None
+        connection_failed_since = None
+        while True:
+            try:
                 history = await self.get_history(prompt_id)
                 if history:
-                    break
+                    status = history.get("status", {})
+                    if status.get("status_str") == "error":
+                        raise ComfyUIExecutionError(f"ComfyUI execution failed: {status.get('messages')}")
+                    if status.get("completed") or history.get("outputs"):
+                        return await self.collect_outputs(prompt_id, history, seed)
+                session = await self.get_session()
+                async with session.get(f"{self.settings.comfy_http_url}/queue",
+                                       timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                    resp.raise_for_status()
+                    queue = await resp.json()
+                connection_failed_since = None
+                present = any(item[1] == prompt_id for key in ("queue_running", "queue_pending")
+                              for item in queue.get(key, []))
+                if not present:
+                    if is_cancelled and is_cancelled():
+                        raise ComfyUIExecutionError("Cancellation confirmed: original prompt absent from engine queue")
+                    # History can become visible a moment after queue removal.
+                    if offline_since is None:
+                        offline_since = time.monotonic()
+                    elif time.monotonic() - offline_since > 15:
+                        raise ComfyUIExecutionError(f"Uncertain execution {prompt_id}: absent from history and queue")
+                else:
+                    offline_since = None
+            except ComfyUIExecutionError:
+                raise
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                logger.warning("ComfyUI unreachable while monitoring %s; retaining ownership", prompt_id)
+                if connection_failed_since is None:connection_failed_since=time.monotonic()
+                elif time.monotonic()-connection_failed_since>60:
+                    raise ComfyUIExecutionError(f"Uncertain execution {prompt_id}: engine offline for 60s; paused until reconciliation")
+            await asyncio.sleep(1)
 
-        if not history:
-            raise ComfyUIExecutionError(f"Execution completed but no history found for prompt_id {prompt_id}")
+    async def collect_outputs(self, prompt_id: str, history: dict, seed: int) -> List[GeneratedImageInfo]:
+        images = []
+        for output in history.get("outputs", {}).values():
+            for item in output.get("images", []):
+                filename = item.get("filename")
+                if not filename:
+                    continue
+                data = await self.download_image(filename, item.get("subfolder", ""), item.get("type", "output"))
+                local_name = f"out_{prompt_id[:8]}_{Path(filename).name}"
+                path = self.settings.storage_outputs_dir / local_name
+                temporary = path.with_suffix(".tmp")
+                temporary.write_bytes(data)
+                with Image.open(temporary) as im:
+                    im.verify()
+                temporary.replace(path)
+                with Image.open(path) as im:
+                    width, height = im.size
+                images.append(GeneratedImageInfo(filename=local_name, url=f"/outputs/{local_name}",
+                    file_path=str(path.resolve()), size_bytes=len(data), width=width, height=height, seed=seed))
+        if not images:
+            raise ComfyUIExecutionError("Completed workflow returned no valid images")
+        return images
 
-        outputs = history.get("outputs", {})
-        for node_id, node_output in outputs.items():
-            if "images" in node_output:
-                for img_data in node_output["images"]:
-                    remote_filename = img_data.get("filename")
-                    subfolder = img_data.get("subfolder", "")
-                    folder_type = img_data.get("type", "output")
+    def recover_local_output(self,workflow,seed,prompt_id):
+        """Recover a finished PNG by exact embedded graph; never generate or guess by name."""
+        import shutil
+        prefixes=[Path(n.get('inputs',{}).get('filename_prefix','')).name for n in workflow.values() if n.get('class_type')=='SaveImage']
+        candidates=[]
+        for prefix in prefixes:
+            if prefix:candidates.extend(self.settings.comfyui_output_dir.glob(prefix+'*.png'))
+        for source in sorted(set(candidates),key=lambda p:p.stat().st_mtime,reverse=True):
+            try:
+                with Image.open(source) as im:
+                    if json.loads(im.info.get('prompt','{}'))!=workflow:continue
+                    width,height=im.size;im.verify()
+                name=f'out_{prompt_id[:8]}_{source.name}';target=self.settings.storage_outputs_dir/name
+                tmp=target.with_suffix('.tmp');shutil.copyfile(source,tmp);tmp.replace(target)
+                return [GeneratedImageInfo(filename=name,url=f'/outputs/{name}',file_path=str(target.resolve()),
+                    size_bytes=target.stat().st_size,width=width,height=height,seed=seed)]
+            except (OSError,ValueError):continue
+        return []
 
-                    if not remote_filename:
-                        continue
-
-                    # Download image bytes
-                    img_bytes = await self.download_image(remote_filename, subfolder, folder_type)
-
-                    # Save to local storage/outputs
-                    local_filename = f"out_{prompt_id[:8]}_{remote_filename}"
-                    local_path = self.settings.storage_outputs_dir / local_filename
-                    with open(local_path, "wb") as f:
-                        f.write(img_bytes)
-
-                    # Inspect dimensions
-                    width, height = 1024, 1024
-                    try:
-                        with Image.open(local_path) as im:
-                            width, height = im.width, im.height
-                    except Exception:
-                        pass
-
-                    info = GeneratedImageInfo(
-                        filename=local_filename,
-                        subfolder=subfolder,
-                        url=f"/outputs/{local_filename}",
-                        file_path=str(local_path.resolve()),
-                        content_type="image/png",
-                        size_bytes=len(img_bytes),
-                        width=width,
-                        height=height,
-                        seed=seed,
-                    )
-                    generated_images.append(info)
-
-        if not generated_images:
-            raise ComfyUIExecutionError("No output images were generated by the workflow")
-
-        return generated_images
+    async def capabilities(self) -> dict:
+        session = await self.get_session()
+        async with session.get(f"{self.settings.comfy_http_url}/object_info",
+                               timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            resp.raise_for_status()
+            info = await resp.json()
+        def choices(node, field):
+            value = info.get(node, {}).get("input", {}).get("required", {}).get(field, [[]])
+            return value[0] if value and isinstance(value[0], list) else []
+        settings=self.settings
+        diffusion=choices("UNETLoader","unet_name")
+        clips=choices("CLIPLoader","clip_name")
+        vaes=choices("VAELoader","vae_name")
+        needed=["ReferenceLatent","EmptyFlux2LatentImage","Flux2Scheduler","CFGGuider","SamplerCustomAdvanced"]
+        klein_ready=(settings.default_klein_model in diffusion and settings.default_klein_clip in clips
+                     and settings.default_klein_vae in vaes and all(n in info for n in needed))
+        qwen_needed=['UnetLoaderGGUF','TextEncodeQwenImageEditPlus','ReferenceLatent','FluxKontextMultiReferenceLatentMethod',
+                     'EmptySD3LatentImage','ModelSamplingAuraFlow','CFGNorm','KSampler','VAEEncodeTiled','VAEDecodeTiled']
+        qwen_missing=[name for name,present in [
+            (settings.default_qwen_edit_model,settings.default_qwen_edit_model in choices('UnetLoaderGGUF','unet_name')),
+            (settings.default_qwen_edit_clip,settings.default_qwen_edit_clip in clips),
+            (settings.default_qwen_edit_vae,settings.default_qwen_edit_vae in vaes)] if not present]
+        qwen_missing.extend(n for n in qwen_needed if n not in info)
+        return {"sdxl_models": choices("CheckpointLoaderSimple", "ckpt_name"),
+                "flux_models": choices("UnetLoaderGGUF", "unet_name"),
+                "text_encoders": choices("DualCLIPLoader", "clip_name1"),
+                "vae_models": choices("VAELoader", "vae_name"),
+                "character_consistency": "IPAdapterFaceID" in info,
+                "controlnet_models": choices("ControlNetLoader", "control_net_name"),
+                "reference_composition":klein_ready,
+                "reference_engine":"FLUX.2 Klein 4B distilled" if klein_ready else None,
+                "qwen_reference_composition":not qwen_missing,
+                "qwen_reference_engine":"Qwen-Image-Edit-2511 GGUF Q4_K_M" if not qwen_missing else None,
+                "qwen_max_references":3,
+                "qwen_missing":qwen_missing,
+                "klein_models":diffusion,
+                "klein_text_encoders":clips,
+                "klein_missing":[name for name,present in [(settings.default_klein_model,settings.default_klein_model in diffusion),
+                    (settings.default_klein_clip,settings.default_klein_clip in clips),(settings.default_klein_vae,settings.default_klein_vae in vaes)] if not present],
+                "simulation": False}
 
     # --------------------------------------------------------------------------
     # Resource Control
@@ -328,125 +364,6 @@ class ComfyUIClient:
                 return resp.status == 200
         except Exception:
             return False
-
-    async def _simulate_generation(
-        self,
-        workflow_prompt: dict,
-        seed: int,
-        on_progress: Optional[Callable[[int, int], Any]] = None,
-    ) -> List[GeneratedImageInfo]:
-        """
-        Simulate GPU inference pipeline when ComfyUI is offline.
-        Executes step progression with WebSockets and generates an illustrative test image.
-        """
-        import time
-        from PIL import ImageDraw
-
-        prompt_text = "Biblical portrait scene"
-        width, height = 1024, 1024
-        steps = 30
-        anchor_filename = None
-
-        for node_id, node in workflow_prompt.items():
-            class_type = node.get("class_type", "")
-            inputs = node.get("inputs", {})
-            if class_type == "EmptyLatentImage":
-                width = int(inputs.get("width", 1024))
-                height = int(inputs.get("height", 1024))
-            elif class_type == "KSampler":
-                steps = int(inputs.get("steps", 30))
-            elif class_type == "LoadImage":
-                anchor_filename = inputs.get("image")
-            elif class_type == "CLIPTextEncode":
-                t = inputs.get("text", "")
-                if not any(neg in t.lower() for neg in ["ugly", "deformed", "bad anatomy", "watermark", "low quality"]):
-                    prompt_text = t
-
-        # Simulate step progression with realistic timing
-        total_time = 2.2
-        sleep_per_step = max(0.02, total_time / max(steps, 1))
-
-        for step in range(1, steps + 1):
-            await asyncio.sleep(sleep_per_step)
-            if on_progress:
-                try:
-                    res = on_progress(step, steps)
-                    if asyncio.iscoroutine(res):
-                        await res
-                except Exception:
-                    pass
-
-        # Generate realistic illustrative test canvas with Pillow
-        img = Image.new("RGB", (width, height), color=(15, 23, 42))
-        draw = ImageDraw.Draw(img)
-
-        # Draw decorative background gradient
-        for y in range(height):
-            ratio = y / height
-            r = int(18 + ratio * 80)
-            g = int(24 + ratio * 60)
-            b = int(48 + ratio * 30)
-            draw.line([(0, y), (width, y)], fill=(r, g, b))
-
-        # Check if an anchor image exists to composite in center
-        anchor_loaded = False
-        if anchor_filename:
-            char_path = self.settings.storage_characters_dir / anchor_filename
-            loc_path = self.settings.storage_locations_dir / anchor_filename
-            target_path = char_path if char_path.exists() else (loc_path if loc_path.exists() else None)
-            if target_path:
-                try:
-                    with Image.open(target_path) as ref_img:
-                        ref_resized = ref_img.resize((int(width * 0.50), int(height * 0.50)))
-                        paste_x = int((width - ref_resized.width) / 2)
-                        paste_y = int((height - ref_resized.height) / 2) - 20
-                        draw.rectangle(
-                            [paste_x - 6, paste_y - 6, paste_x + ref_resized.width + 6, paste_y + ref_resized.height + 6],
-                            fill=(34, 197, 94),
-                        )
-                        img.paste(ref_resized, (paste_x, paste_y))
-                        anchor_loaded = True
-                except Exception:
-                    pass
-
-        if not anchor_loaded:
-            cx, cy = width // 2, int(height * 0.42)
-            for radius in range(200, 40, -20):
-                draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], outline=(234, 179, 8), width=3)
-            draw.ellipse([cx - 50, cy - 50, cx + 50, cy + 50], fill=(250, 204, 21))
-
-        # Top banner & border
-        draw.rectangle([20, 20, width - 20, height - 20], outline=(34, 197, 94), width=4)
-        draw.rectangle([20, 20, width - 20, 70], fill=(15, 23, 42))
-        draw.text((36, 32), "LOCAL MEDIA HUB • TEST INFERENCE PIPELINE (MOCK ENGINE)", fill=(34, 197, 94))
-
-        # Bottom info card
-        draw.rectangle([20, height - 120, width - 20, height - 20], fill=(9, 13, 22))
-        clean_prompt = (prompt_text[:110] + "...") if len(prompt_text) > 110 else prompt_text
-        draw.text((36, height - 105), f"PROMPT: {clean_prompt}", fill=(241, 245, 249))
-        draw.text(
-            (36, height - 60),
-            f"SEED: {seed}   |   STEPS: {steps}   |   SIZE: {width}x{height}   |   STATUS: OK",
-            fill=(148, 163, 184),
-        )
-
-        out_filename = f"test_out_{int(time.time())}_{seed}.png"
-        out_path = self.settings.storage_outputs_dir / out_filename
-        img.save(out_path, format="PNG")
-
-        return [
-            GeneratedImageInfo(
-                filename=out_filename,
-                subfolder="",
-                url=f"/outputs/{out_filename}",
-                file_path=str(out_path.resolve()),
-                content_type="image/png",
-                size_bytes=out_path.stat().st_size,
-                width=width,
-                height=height,
-                seed=seed,
-            )
-        ]
 
 
 _comfy_client_instance: Optional[ComfyUIClient] = None

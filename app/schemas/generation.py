@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field, field_validator
 class ModelEngine(str, Enum):
     SDXL = "sdxl"
     FLUX_SCHNELL = "flux_schnell"
+    FLUX_KLEIN = "flux_klein"
+    QWEN_IMAGE_EDIT = "qwen_image_edit"
     CHARACTER_CONSISTENCY = "character_consistency"
     LOCATION_CONSISTENCY = "location_consistency"
 
@@ -18,6 +20,7 @@ class JobStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+    UNCERTAIN = "uncertain"
 
 
 def utc_now() -> datetime:
@@ -25,7 +28,7 @@ def utc_now() -> datetime:
 
 
 class BaseGenerateRequest(BaseModel):
-    prompt: str = Field(..., min_length=1, max_length=2000, description="Text prompt for image generation")
+    prompt: str = Field(..., min_length=1, max_length=12000, description="Text prompt for image generation")
     seed: Optional[int] = Field(default=None, ge=0, le=2**32 - 1, description="Random seed for reproducibility")
     width: int = Field(default=1024, ge=512, le=2048, description="Image width (must be multiple of 8)")
     height: int = Field(default=1024, ge=512, le=2048, description="Image height (must be multiple of 8)")
@@ -33,6 +36,14 @@ class BaseGenerateRequest(BaseModel):
         default=True,
         description="If True, endpoint blocks until generation completes and returns image info. If False, returns 202 with job_id immediately."
     )
+    request_id: Optional[str] = Field(default=None, min_length=1, max_length=200)
+
+    @field_validator("prompt")
+    @classmethod
+    def validate_prompt(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Prompt must not be blank")
+        return v
 
     @field_validator("width", "height")
     @classmethod

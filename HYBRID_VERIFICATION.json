@@ -1,0 +1,138 @@
+{
+  "passed": true,
+  "date": "2026-10-11",
+  "project_id": "exodo-local-referencias-20261011",
+  "native_mcp": true,
+  "reference_model": "FLUX.2 Klein 4B distilled fp8",
+  "approved_references": 6,
+  "tests_passed": 34,
+  "hybrid_verified": [
+    "UI manual review read by MCP",
+    "MCP manual review reflected in UI",
+    "UI slot selection read by MCP",
+    "MCP restored original slot selection",
+    "UI generate 001P completed and read by MCP",
+    "Hub restart preserved references and completed scenes",
+    "UI stale prompt editor rejected MCP concurrent change and preserved human text",
+    "State restore preserved four completed job identities",
+    "ZIP validated with four PNGs resized to1920x1080"
+  ],
+  "scenes": [
+    {
+      "source_index": "003P",
+      "job_id": "657422d1-42fd-4311-92e3-0b99aa1aff97",
+      "status": "completed",
+      "seconds": 8.1,
+      "references": [
+        {
+          "id": "char_moises",
+          "shot_id": "7709e9c4-483b-4f80-b450-1fe5df250c37"
+        }
+      ],
+      "actual_loaded_images": 1,
+      "images": [
+        {
+          "filename": "out_9fe15d95_LMH_KLEIN_00007_.png",
+          "subfolder": "",
+          "url": "/outputs/out_9fe15d95_LMH_KLEIN_00007_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_9fe15d95_LMH_KLEIN_00007_.png",
+          "content_type": "image/png",
+          "size_bytes": 841580,
+          "width": 1024,
+          "height": 576,
+          "seed": 2913980329
+        }
+      ]
+    },
+    {
+      "source_index": "003R",
+      "job_id": "5311d113-385a-4b8b-b8c4-88d437bdd9f8",
+      "status": "completed",
+      "seconds": 8.1,
+      "references": [
+        {
+          "id": "char_moises",
+          "shot_id": "7709e9c4-483b-4f80-b450-1fe5df250c37"
+        }
+      ],
+      "actual_loaded_images": 1,
+      "images": [
+        {
+          "filename": "out_874edfb9_LMH_KLEIN_00008_.png",
+          "subfolder": "",
+          "url": "/outputs/out_874edfb9_LMH_KLEIN_00008_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_874edfb9_LMH_KLEIN_00008_.png",
+          "content_type": "image/png",
+          "size_bytes": 907921,
+          "width": 1024,
+          "height": 576,
+          "seed": 1780143367
+        }
+      ]
+    },
+    {
+      "source_index": "023R",
+      "job_id": "995f67b2-ea4e-4674-b645-2b76c8664306",
+      "status": "completed",
+      "seconds": 23.28,
+      "references": [
+        {
+          "id": "char_moises",
+          "shot_id": "7709e9c4-483b-4f80-b450-1fe5df250c37"
+        },
+        {
+          "id": "obj_tablas",
+          "shot_id": "4a18d932-9078-4048-9ae9-c67662e14e1a"
+        },
+        {
+          "id": "place_sinai",
+          "shot_id": "ac741cde-c5d8-43a1-8f46-8545874b18e8"
+        }
+      ],
+      "actual_loaded_images": 3,
+      "images": [
+        {
+          "filename": "out_f0703a75_LMH_KLEIN_00009_.png",
+          "subfolder": "",
+          "url": "/outputs/out_f0703a75_LMH_KLEIN_00009_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_f0703a75_LMH_KLEIN_00009_.png",
+          "content_type": "image/png",
+          "size_bytes": 1029452,
+          "width": 1024,
+          "height": 576,
+          "seed": 2133781350
+        }
+      ]
+    },
+    {
+      "source_index": "001P",
+      "submitted_via": "web UI",
+      "job_id": "8670407c-d2f3-4523-b6af-5c8480f88815",
+      "status": "completed",
+      "seconds": 15.53,
+      "images": [
+        {
+          "filename": "out_cd1b4cee_LMH_KLEIN_00010_.png",
+          "subfolder": "",
+          "url": "/outputs/out_cd1b4cee_LMH_KLEIN_00010_.png",
+          "file_path": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_cd1b4cee_LMH_KLEIN_00010_.png",
+          "content_type": "image/png",
+          "size_bytes": 1049926,
+          "width": 1024,
+          "height": 576,
+          "seed": 1392784335
+        }
+      ]
+    }
+  ],
+  "export": {
+    "completed_files": 4,
+    "pending": 56
+  },
+  "limitations": [
+    "Samples need editorial review",
+    "1024x576 native images resized to1920x1080 on export",
+    "JSON restores editing state in existing project on this PC; storage folder needed for full media backup",
+    "Code saved locally, no commit/push performed"
+  ]
+}

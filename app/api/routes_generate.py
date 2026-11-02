@@ -63,6 +63,7 @@ async def generate_sdxl(
         seed=seed,
         prompt=req.prompt,
         metadata=metadata,
+        request_id=req.request_id,
     )
 
     if req.wait_for_completion:
@@ -114,6 +115,7 @@ async def generate_flux(
         seed=seed,
         prompt=req.prompt,
         metadata=metadata,
+        request_id=req.request_id,
     )
 
     if req.wait_for_completion:
@@ -190,6 +192,7 @@ async def generate_character(
         seed=seed,
         prompt=full_prompt,
         metadata=metadata,
+        request_id=req.request_id,
     )
 
     if req.wait_for_completion:
@@ -266,6 +269,7 @@ async def generate_location(
         seed=seed,
         prompt=full_prompt,
         metadata=metadata,
+        request_id=req.request_id,
     )
 
     if req.wait_for_completion:
@@ -307,6 +311,14 @@ async def list_jobs(
 ):
     jobs = queue_mgr.list_jobs(limit=limit)
     return JobListResponse(jobs=jobs, total=len(jobs))
+
+
+@router.post("/jobs/{job_id}/reconcile")
+async def reconcile_job(job_id: str, queue_mgr: QueueManager = Depends(get_queue_manager)):
+    try:
+        return await queue_mgr.reconcile_job(job_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found")
 
 
 @router.post(

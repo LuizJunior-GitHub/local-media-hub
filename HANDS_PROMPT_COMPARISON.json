@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-11",
+  "project_id": "exodo-prompts-maos-20261011",
+  "transport": "native MCP",
+  "seed": 1392784335,
+  "steps": 4,
+  "engine": "FLUX.2 Klein 4B distilled fp8",
+  "original_prompt": "Sin pirámides, esfinges, jeroglíficos, coronas ni arquitectura que identifique un país. Primerísimo plano de manos adultas curtidas amasando barro en una cubeta; solo antebrazos con mangas de lino áspero y el borde del recipiente entran en cuadro. Trabajo forzado del relato de Éxodo, sin horizonte; luz lateral cálida, cámara baja y foco en las manos. Estilo cinematográfico bíblico realista, ambientación del relato de Éxodo en el antiguo Cercano Oriente, tejidos y herramientas preindustriales, sin objetos modernos ni marcas de agua. NO TEXT, NO LETTERS, NO WORDS, NO LOGO, 16:9",
+  "results": [
+    {
+      "variant": "anatomia",
+      "label": "Anatomia explícita",
+      "prompt": "Sin pirámides, esfinges, jeroglíficos, coronas ni arquitectura que identifique un país. Primerísimo plano de manos adultas curtidas amasando barro en una cubeta; solo antebrazos con mangas de lino áspero y el borde del recipiente entran en cuadro. Trabajo forzado del relato de Éxodo, sin horizonte; luz lateral cálida, cámara baja y foco en las manos. Estilo cinematográfico bíblico realista, ambientación del relato de Éxodo en el antiguo Cercano Oriente, tejidos y herramientas preindustriales, sin objetos modernos ni marcas de agua. NO TEXT, NO LETTERS, NO WORDS, NO LOGO, 16:9\nExactamente dos manos de UNA sola persona adulta, conectadas a sus propios antebrazos. Anatomía natural: cada mano tiene cuatro dedos largos y un pulgar. Ambos pulgares claramente distinguibles junto a los cuatro dedos, sin dedos fusionados, faltantes ni duplicados. Mantener la acción de amasar barro; sin manos ni brazos de otras personas.",
+      "job_id": "f6db4737-1d65-40d2-abbf-58a2c464f839",
+      "status": "completed",
+      "seconds": 17.03,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_cd8d62f5_LMH_KLEIN_00019_.png",
+      "assessment": "Anatomy wording alone did not enforce two hands: additional forearms persist."
+    },
+    {
+      "variant": "pose",
+      "label": "Pose para mostrar los dedos",
+      "prompt": "Primerísimo plano cenital de exactamente DOS manos de una sola persona adulta hebrea presionando una capa baja de barro húmedo dentro de una cubeta ancha. Ambas manos abiertas, palmas hacia abajo, dedos suavemente separados y apoyados sobre la superficie. En cada mano se ven cuatro dedos largos y un pulgar extendido lateralmente, cinco dedos completos y distinguibles por mano; el barro no cubre los dedos. Las manos no se superponen y los antebrazos entran paralelos desde el mismo borde inferior. Solo estas dos manos y sus dos antebrazos con mangas de lino áspero, sin otras personas ni brazos, sin herramientas. Trabajo forzado del relato de Éxodo, sin horizonte, pirámides, coronas o símbolos identificadores. Luz lateral cálida, detalle natural de piel y barro, estilo cinematográfico bíblico realista, tejidos preindustriales, sin objetos modernos ni marcas de agua. NO TEXT, NO LETTERS, NO WORDS, NO LOGO, 16:9",
+      "job_id": "ea4236ae-e2f7-4388-ac53-559161594de6",
+      "status": "completed",
+      "seconds": 9.11,
+      "image": "D:\\GitHub\\local-media-hub\\storage\\outputs\\out_4b4566eb_LMH_KLEIN_00020_.png",
+      "assessment": "Two hands, four long fingers and one thumb visible on each hand; overhead pose pressing clay. One sample only."
+    }
+  ],
+  "limitation": "One seed and one output per variant; no guarantee across future scenes. Pose changed from kneading with bent fingers to pressing clay with open hands."
+}
